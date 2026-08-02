@@ -163,11 +163,28 @@ graph LR
 
 <hr />
 
-<h2>Getting Started</h2>
+<h2>Multi-AI Integration & Getting Started</h2>
 
-<p>Integrate the required skill directories into your environment (e.g., <code>.claude/skills/</code> for Claude Code or the Claude Platform skills workspace).</p>
+<p>Ray Framework is engineered to be platform-agnostic and works seamlessly across multiple AI agent environments. The repository includes native integration directories for the most prominent AI coding assistants.</p>
 
-<p>A minimal execution pass requires the following sequence:</p>
+<h3>Environment Setup</h3>
+
+<p>To deploy the skills into your target repository, copy or symlink the required <code>ray-*</code> skill directories into the corresponding configuration folder of your chosen AI assistant:</p>
+
+<ul>
+  <li><strong>Claude:</strong> Place skills in the <code>.claude/skills/</code> directory within your workspace.</li>
+  <li><strong>Gemini:</strong> Place skills in the <code>.gemini/skills/</code> directory.</li>
+  <li><strong>Codex / OpenAI:</strong> Place skills in the <code>.codex/skills/</code> directory.</li>
+  <li><strong>Cursor:</strong> Place skills in the <code>.cursor/rules/</code> directory to ensure they are ingested as repository rules.</li>
+</ul>
+
+<p>Empty template directories for these platforms are already included at the root of this repository (<code>.claude</code>, <code>.gemini</code>, <code>.codex</code>, <code>.cursor</code>) to serve as structural references.</p>
+
+<hr />
+
+<h3>Executing a Pass</h3>
+
+<p>Once the skills are integrated into your AI environment's context, a minimal execution pass requires invoking them in the following sequence:</p>
 
 <pre><code>/ray-prism        # Generate repository map
 /ray-blueprint    # Synthesize the knowledge base
