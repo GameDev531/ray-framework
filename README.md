@@ -1,39 +1,44 @@
 <div align="center">
 
-<!-- You can replace banner.png with the exact filename of the uploaded photo -->
 <img src="banner.png" alt="Ray Framework Banner" width="100%" />
 
-# 🛡️ Ray Framework
+<h1>Ray Framework</h1>
 
-**An agentic, evidence-first security review pipeline built as a set of composable Claude Skills.**
+<strong>An agentic, evidence-first security review pipeline built as a set of composable Claude Skills.</strong>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Status: Active](https://img.shields.io/badge/Status-Active-success.svg)]()
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
+<br />
 
-*Ray decomposes a full security audit—from mapping a codebase to shipping a stakeholder-facing report—into independent, single-responsibility stages.*
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a>
+<a href="#"><img src="https://img.shields.io/badge/Status-Active-success.svg" alt="Status: Active" /></a>
+<a href="#"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome" /></a>
+
+<br /><br />
+
+<em>Ray decomposes a full security audit&mdash;from mapping a codebase to shipping a stakeholder-facing report&mdash;into independent, single-responsibility stages.</em>
 
 </div>
 
----
+<hr />
 
-## ⚡ Why Ray Exists
+<h2>Why Ray Exists</h2>
 
-Most LLM-driven "vulnerability scanners" rely on a single prompt asking *"is this code vulnerable?"*. This approach yields unpredictable false-positive and false-negative rates—essentially acting on the model's mood.
+<p>Most LLM-driven vulnerability scanners rely on a single prompt asking <em>"is this code vulnerable?"</em>. This approach yields unpredictable false-positive and false-negative rates, essentially acting on the model's disposition.</p>
 
-**Ray takes a different approach: Never let one model call be the whole verdict.**
+<p><strong>Ray takes a distinct approach: No single model call serves as the final verdict.</strong></p>
 
-- 🛑 **Findings start as guilty, not innocent.** The validation stage assumes every reported bug is a false positive. It must be *disproven* against the actual source code to survive.
-- 💥 **A bug isn't "confirmed" until it's reproduced.** Static suspicion triggers a sandboxed proof-of-concept. Real execution evidence (a sanitizer trace, an unauthorized `200 OK`, a crash signal) is required—not just a confident paragraph.
-- 📉 **Severity is capped, not just scored.** A rules-based sanity layer forces down anything that is dead code, test-only, requires an implausible attacker position, or is merely missing defense-in-depth. A `HIGH` finding actually means something.
-- ❄️ **The codebase is frozen mid-audit.** Every pass runs against an immutable, content-hashed snapshot. A finding's line numbers, its "still open" status, and its regression history remain meaningful even as the real repo continues to evolve.
-- 🔍 **Nothing gets silently dropped.** Ambiguous cases are routed to `NEEDS_RESEARCH`, never to the trash. Regressions are explicitly detected, never quietly re-merged into history.
+<ul>
+  <li><strong>Findings start as guilty, not innocent.</strong> The validation stage assumes every reported anomaly is a false positive. It must be explicitly disproven against the source code to survive.</li>
+  <li><strong>A vulnerability is not confirmed until it is reproduced.</strong> Static suspicion triggers a sandboxed proof-of-concept. Authentic execution evidence (e.g., a sanitizer trace, an unauthorized HTTP 200 response, a crash signal) is strictly required.</li>
+  <li><strong>Severity is capped, not merely scored.</strong> A rules-based sanity layer mitigates inflated severity by identifying dead code, test-only paths, implausible attacker positions, or missing defense-in-depth measures. A HIGH severity finding represents a validated risk.</li>
+  <li><strong>The codebase is frozen mid-audit.</strong> Every execution pass runs against an immutable, content-hashed snapshot. A finding's line numbers, unresolved status, and regression history remain accurate as the repository evolves.</li>
+  <li><strong>Nothing is silently discarded.</strong> Ambiguous cases are routed to <code>NEEDS_RESEARCH</code>, ensuring manual review. Regressions are explicitly flagged and tracked.</li>
+</ul>
 
----
+<hr />
 
-## 🧩 Pipeline at a Glance
+<h2>Pipeline Architecture</h2>
 
-Every stage degrades gracefully if the surrounding stages are missing or unavailable. There is no single point of failure that can take down the entire campaign.
+<p>Each stage degrades gracefully if surrounding modules are unavailable, ensuring no single point of failure disrupts the campaign.</p>
 
 ```mermaid
 graph LR
@@ -56,70 +61,139 @@ graph LR
     class A meta;
 ```
 
----
+<hr />
 
-## 🛠️ The Skills Suite
+<h2>The Skills Suite</h2>
 
-Ray's architecture relies on distinct, isolated skills. Each folder is self-contained with a `SKILL.md` at its root.
+<p>Ray's architecture relies on distinct, isolated skills. Each directory is self-contained with a dedicated <code>SKILL.md</code> documentation file.</p>
 
-| Skill | Stage | Description |
-| :--- | :--- | :--- |
-| 🔮 **`ray-prism`** | *Pre-processing* | Generates bottom-up, security-focused digests of every directory. |
-| 🏗️ **`ray-blueprint`** | *Knowledge base* | Synthesizes architecture, entities, and data flows into a linked KB. |
-| 🚧 **`ray-perimeter`** | *Knowledge base* | Builds the threat model: trust boundaries, attacker profiles, assets. |
-| 🧭 **`ray-compass`** | *Planning* | Turns the threat model + history into a targeted investigation roadmap. |
-| ⛏️ **`ray-prospector`** | *Discovery* | Wave-based swarm auditing of source files against the plan. |
-| 🗜️ **`ray-condenser`** | *Consolidation* | Merges duplicate findings across parallel sub-agents and passes. |
-| ⚖️ **`ray-arbiter`** | *Validation* | Assumes every finding is a false positive; must be disproven to survive. |
-| 🧑‍⚖️ **`ray-magistrate`** | *Validation* | Judges production viability—kills dead code, debug builds, test-only paths. |
-| 💣 **`ray-detonator`** | *Verification* | Writes and executes sandboxed PoCs; demands real execution evidence. |
-| 🎛️ **`ray-gauge`** | *Scoring* | Computes final risk with 27 sanity caps against over/under-scoring. |
-| 📜 **`ray-chronicle`** | *Reporting* | Produces the polished, stakeholder-facing Markdown review packet. |
-| 🧠 **`ray-retrospective`** | *Meta* | Mines agent trajectories for durable lessons across future passes. |
-| 🕸️ **`ray-lattice`** | *Meta (optional)*| AST-level structural index for grep-scale codebases. |
-| 🏭 **`ray-foundry`** | *Meta* | Interactive consultant for building your own orchestrator around Ray. |
+<table>
+  <thead>
+    <tr>
+      <th>Skill</th>
+      <th>Stage</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong><code>ray-prism</code></strong></td>
+      <td>Pre-processing</td>
+      <td>Generates bottom-up, security-focused digests of every directory.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-blueprint</code></strong></td>
+      <td>Knowledge base</td>
+      <td>Synthesizes architecture, entities, and data flows into a linked knowledge base.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-perimeter</code></strong></td>
+      <td>Knowledge base</td>
+      <td>Builds the threat model, defining trust boundaries, attacker profiles, and assets.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-compass</code></strong></td>
+      <td>Planning</td>
+      <td>Translates the threat model and history into a targeted investigation roadmap.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-prospector</code></strong></td>
+      <td>Discovery</td>
+      <td>Performs wave-based swarm auditing of source files against the generated plan.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-condenser</code></strong></td>
+      <td>Consolidation</td>
+      <td>Merges duplicate findings across parallel sub-agents and execution passes.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-arbiter</code></strong></td>
+      <td>Validation</td>
+      <td>Assumes every finding is a false positive; actively attempts to disprove findings.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-magistrate</code></strong></td>
+      <td>Validation</td>
+      <td>Judges production viability, filtering out dead code, debug builds, and test-only paths.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-detonator</code></strong></td>
+      <td>Verification</td>
+      <td>Develops and executes sandboxed PoCs, demanding concrete execution evidence.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-gauge</code></strong></td>
+      <td>Scoring</td>
+      <td>Computes the final risk utilizing 27 sanity caps to prevent over-scoring and under-scoring.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-chronicle</code></strong></td>
+      <td>Reporting</td>
+      <td>Produces the finalized, stakeholder-facing Markdown review packet.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-retrospective</code></strong></td>
+      <td>Meta</td>
+      <td>Extracts durable lessons from agent trajectories for future passes.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-lattice</code></strong></td>
+      <td>Meta (optional)</td>
+      <td>Builds an AST-level structural index tailored for grep-scale codebases.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-foundry</code></strong></td>
+      <td>Meta</td>
+      <td>Acts as an interactive consultant for engineering custom orchestrators around Ray.</td>
+    </tr>
+  </tbody>
+</table>
 
----
+<hr />
 
-## 📐 Design Principles
+<h2>Design Principles</h2>
 
-1. **Deterministic contracts, not vibes.** Every skill declares exactly what it reads, writes, and its idempotency guarantee.
-2. **Snapshot-pinned by default.** A pass reads one frozen, content-hashed copy of the codebase. Results are reproducible and regressions are detectable.
-3. **HINT vs. AUTHORITATIVE, always explicit.** Optional accelerators can only *reorder* work—they never cause a real call-site or file to be skipped.
-4. **Fail conservative.** When a stage can't confidently determine an outcome, it routes to `NEEDS_RESEARCH` / `not_attempted` / `UNKNOWN`—never to a false clean bill of health.
-5. **Token-efficient by construction.** Large state lives on disk as UUID-keyed JSON; agents pass references, not walls of text.
+<ol>
+  <li><strong>Deterministic contracts.</strong> Every skill explicitly declares its read operations, write operations, and idempotency guarantees.</li>
+  <li><strong>Snapshot-pinned by default.</strong> Executions run against one frozen, content-hashed repository state, ensuring reproducibility and precise regression tracking.</li>
+  <li><strong>Strictly advisory accelerators.</strong> Optional components (such as semantic retrieval or structural indexing) may reorder workloads but cannot authorize the skipping of files or call-sites.</li>
+  <li><strong>Fail conservative.</strong> When a stage cannot confidently ascertain a result, it routes to <code>NEEDS_RESEARCH</code>, <code>not_attempted</code>, or <code>UNKNOWN</code>. It never issues a false positive clearance.</li>
+  <li><strong>Token-efficient state management.</strong> State resides on disk via UUID-keyed JSON objects. Agents communicate via references rather than transmitting extensive text payloads.</li>
+</ol>
 
----
+<hr />
 
-## 🚀 Getting Started
+<h2>Getting Started</h2>
 
-Drop the required skill folders into your Skills directory (e.g., `.claude/skills/` for Claude Code or your Claude Platform skills workspace).
+<p>Integrate the required skill directories into your environment (e.g., <code>.claude/skills/</code> for Claude Code or the Claude Platform skills workspace).</p>
 
-A minimal first pass looks like this:
+<p>A minimal execution pass requires the following sequence:</p>
 
-```bash
-/ray-prism        # Map the repo
-/ray-blueprint    # Build the knowledge base
-/ray-perimeter    # Build the threat model
+<pre><code>/ray-prism        # Generate repository map
+/ray-blueprint    # Synthesize the knowledge base
+/ray-perimeter    # Construct the threat model
 /ray-compass      # Generate workspace/plan.json
-/ray-prospector   # Audit and write workspace/findings/*.json
-/ray-condenser    # Merge duplicates
+/ray-prospector   # Execute audit and populate workspace/findings/*.json
+/ray-condenser    # Deduplicate findings
 /ray-arbiter      # Validate findings
-/ray-magistrate   # Judge production viability
-/ray-detonator    # Reproduce sandbox
-/ray-gauge        # Score risks
-/ray-chronicle    # Generate report
-```
+/ray-magistrate   # Assess production viability
+/ray-detonator    # Reproduce sandbox environments
+/ray-gauge        # Calculate risk scores
+/ray-chronicle    # Assemble final report</code></pre>
 
-> **Pro Tip:** For a living/continuously-scanned codebase, or to wire in a custom orchestrator, start with `ray-foundry`. It will walk you through the full Pass Lifecycle Contract (sync, pin, run, archive) and the opt-in extensions.
+<blockquote>
+  <p><strong>Note:</strong> For continuous integration on a living codebase or when building a custom orchestrator, it is highly recommended to start with <code>ray-foundry</code>. It provides comprehensive guidance on the Pass Lifecycle Contract (sync, pin, run, archive) and optional extensions.</p>
+</blockquote>
 
----
+<hr />
 
-## 📊 Status
+<h2>Status</h2>
 
-- ✅ **Core Pipeline:** 14 skills implemented and internally consistent.
-- ⏳ **Pending Supporting Skills:** Patch generation (`ray-anvil`), exploit chaining (`ray-cascade`), VCS history mining (`ray-ledger`), and the reference orchestrator itself (`ray-conductor`). Contributions and requests for these are welcome!
+<ul>
+  <li><strong>Core Pipeline:</strong> 14 skills are fully implemented and internally consistent.</li>
+  <li><strong>Pending Components:</strong> Patch generation (<code>ray-anvil</code>), exploit chaining (<code>ray-cascade</code>), VCS history extraction (<code>ray-ledger</code>), and the reference orchestrator (<code>ray-conductor</code>). Contributions for these components are welcome.</li>
+</ul>
 
-## 📜 License
+<h2>License</h2>
 
-[MIT License](LICENSE)
+<p><a href="LICENSE">MIT License</a></p>
