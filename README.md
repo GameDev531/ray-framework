@@ -249,20 +249,30 @@ graph LR
 
 <h2>Multi-AI Integration & Getting Started</h2>
 
-<p>Ray Framework is engineered to be platform-agnostic and works seamlessly across multiple AI agent environments. The repository includes native integration directories for the most prominent AI coding assistants.</p>
+<p>Ray Framework is engineered to be platform-agnostic and works seamlessly across multiple AI agent environments. On Claude Code it installs as a first-class <strong>plugin</strong>; on every other assistant the skills are plain <code>SKILL.md</code> directories you copy into place.</p>
 
-<h3>Environment Setup</h3>
+<h3>Install as a Claude Code plugin (recommended)</h3>
 
-<p>To deploy the skills into your target repository, copy or symlink the required <code>ray-*</code> skill directories into the corresponding configuration folder of your chosen AI assistant:</p>
+<p>The repository ships a <code>.claude-plugin/</code> with a plugin manifest and a marketplace catalog, so the entire framework installs in two commands — no files to copy:</p>
+
+<pre><code>/plugin marketplace add GameDev531/ray-framework
+/plugin install ray@ray-framework</code></pre>
+
+<p>All 21 skills register at once and become available as <code>/ray-*</code> commands (and trigger automatically by description). Update later with <code>/plugin marketplace update ray-framework</code>. The always-on cost is deliberately small — each skill's <code>SKILL.md</code> body is a lean workflow, and its detailed reference dockets load only when the skill is invoked.</p>
+
+<h3>Manual install (Gemini, Codex, Cursor, Antigravity, or Claude without the plugin)</h3>
+
+<p>Copy or symlink the required <code>ray-*</code> skill directories into the corresponding configuration folder of your chosen assistant:</p>
 
 <ul>
-  <li><strong>Claude:</strong> Place skills in the <code>.claude/skills/</code> directory within your workspace.</li>
-  <li><strong>Gemini:</strong> Place skills in the <code>.gemini/skills/</code> directory.</li>
-  <li><strong>Codex / OpenAI:</strong> Place skills in the <code>.codex/skills/</code> directory.</li>
-  <li><strong>Cursor:</strong> Place skills in the <code>.cursor/rules/</code> directory to ensure they are ingested as repository rules.</li>
+  <li><strong>Claude:</strong> <code>.claude/skills/</code> within your workspace (or <code>~/.claude/skills/</code> for every project).</li>
+  <li><strong>Antigravity:</strong> <code>.agents/skills/</code> at your project root (the Agent Skills standard — same <code>SKILL.md</code> format, no changes needed).</li>
+  <li><strong>Gemini:</strong> <code>.gemini/skills/</code>.</li>
+  <li><strong>Codex / OpenAI:</strong> <code>.codex/skills/</code>.</li>
+  <li><strong>Cursor:</strong> <code>.cursor/rules/</code>, so they are ingested as repository rules.</li>
 </ul>
 
-<p>Empty template directories for these platforms are already included at the root of this repository (<code>.claude</code>, <code>.gemini</code>, <code>.codex</code>, <code>.cursor</code>) to serve as structural references.</p>
+<p>Empty template directories for several of these platforms are already included at the root of this repository (<code>.claude</code>, <code>.gemini</code>, <code>.codex</code>, <code>.cursor</code>) to serve as structural references.</p>
 
 <hr />
 
@@ -293,6 +303,7 @@ graph LR
 <h2>Status</h2>
 
 <ul>
+  <li><strong>Packaging:</strong> Installs as a Claude Code plugin (<code>ray@ray-framework</code>) via the bundled <code>.claude-plugin/</code> marketplace; validated with <code>claude plugin validate --strict</code>, all 21 skills load.</li>
   <li><strong>Core Pipeline:</strong> 14 skills are fully implemented and internally consistent.</li>
   <li><strong>Domain Audit Suite:</strong> 7 skills (<code>ray-custodian</code>, <code>ray-turnstile</code>, <code>ray-crucible</code>, <code>ray-seam</code>, <code>ray-sentry</code>, <code>ray-vault</code>, <code>ray-citadel</code>) implemented against the shared findings contract, each with a <code>references/</code> directory holding its findings contract and domain dockets.</li>
   <li><strong>Pending Components:</strong> Patch generation (<code>ray-anvil</code>), exploit chaining (<code>ray-cascade</code>), VCS history extraction (<code>ray-ledger</code>), and the reference orchestrator (<code>ray-conductor</code>). Contributions for these components are welcome.</li>

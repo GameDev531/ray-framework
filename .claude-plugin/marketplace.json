@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "ray-framework",
+  "owner": {
+    "name": "GameDev531",
+    "url": "https://github.com/GameDev531"
+  },
+  "metadata": {
+    "description": "The Ray Framework marketplace: an evidence-first security review pipeline distributed as one installable plugin.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "ray",
+      "source": "./",
+      "description": "The full Ray Framework: 21 security-review skills spanning codebase mapping, threat modeling, the seven-domain audit suite, adversarial validation, sandboxed reproduction, risk scoring, and reporting.",
+      "version": "0.1.0",
+      "keywords": [
+        "security",
+        "owasp",
+        "lgpd",
+        "gdpr",
+        "threat-model",
+        "appsec"
+      ]
+    }
+  ]
+}

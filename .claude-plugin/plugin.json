@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "ray",
+  "displayName": "Ray Framework",
+  "version": "0.1.0",
+  "description": "An agentic, evidence-first security review pipeline: 21 composable skills that map a codebase, build a threat model, audit it across seven security domains, then validate, reproduce, and score every finding before it reaches a report.",
+  "author": {
+    "name": "GameDev531",
+    "url": "https://github.com/GameDev531"
+  },
+  "homepage": "https://github.com/GameDev531/ray-framework",
+  "repository": "https://github.com/GameDev531/ray-framework",
+  "license": "MIT",
+  "keywords": [
+    "security",
+    "security-review",
+    "vulnerability",
+    "owasp",
+    "lgpd",
+    "gdpr",
+    "threat-model",
+    "code-audit",
+    "appsec"
+  ],
+  "skills": [
+    "./ray-lattice",
+    "./ray-prism",
+    "./ray-blueprint",
+    "./ray-perimeter",
+    "./ray-compass",
+    "./ray-prospector",
+    "./ray-custodian",
+    "./ray-turnstile",
+    "./ray-crucible",
+    "./ray-seam",
+    "./ray-sentry",
+    "./ray-vault",
+    "./ray-citadel",
+    "./ray-condenser",
+    "./ray-arbiter",
+    "./ray-magistrate",
+    "./ray-detonator",
+    "./ray-gauge",
+    "./ray-chronicle",
+    "./ray-retrospective",
+    "./ray-foundry"
+  ]
+}
