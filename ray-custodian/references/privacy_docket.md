@@ -24,8 +24,37 @@ ______________________________________________________________________
 
 ## 1. Data Classification Taxonomy
 
-Classify every field found in the Step-2 inventory into exactly one class. The
-class sets the floor for severity and decides which obligations apply.
+### Finding the fields
+
+Sweep schemas, migrations, ORM models, DTOs, validation schemas
+(zod/pydantic/joi/class-validator), GraphQL SDL, protobufs, form markup, and
+analytics call sites. Grep both English and Portuguese field names — real
+Brazilian codebases mix them, and an English-only sweep silently misses half the
+inventory:
+
+```
+email|e_?mail
+phone|telefone|celular|whatsapp
+cpf|cnpj|rg|ssn|tax_?id|passport|documento
+address|endereco|logradouro|cep|zip|postal
+birth|nascimento|dob|idade
+name|nome|sobrenome|full_?name
+card|cartao|iban|pix|conta|agencia|payment
+ip_?address|device_?id|fingerprint|user_?agent
+lat|lng|latitude|longitude|geo|location|localizacao
+health|saude|prontuario|diagnos|medic
+biometric|biometria|face|digital|fingerprint
+race|raca|etnia|religi|politic|sindica|orienta
+```
+
+Free-text fields (`observacoes`, ticket bodies, uploaded documents) routinely
+capture more than their name suggests — record them as `UNKNOWN` classification
+rather than assuming they are safe.
+
+### Classifying them
+
+Classify every field into exactly one class. The class sets the floor for
+severity and decides which obligations apply.
 
 | Class | Examples | Notes for the auditor |
 |---|---|---|
@@ -268,6 +297,30 @@ Enumerate and classify every outbound integration:
 (b) egress of a data class the integration does not need (minimization); (c)
 egress with no scrubbing where the payload demonstrably carries personal data;
 (d) egress to an undisclosed recipient (art. 18 II/VII).
+
+### Egress through URLs
+
+Personal data placed in a URL leaks four ways at once: server access logs,
+browser history, the `Referer` header sent to every third party the page talks
+to, and any proxy in between. Check form `method` attributes and route
+definitions for sensitive fields sent via `GET`, and for tokens, document
+numbers, or record identifiers in path segments and query strings.
+
+### Egress through dangling DNS
+
+A CNAME pointing at a platform hostname whose backing resource no longer exists
+lets whoever claims that resource serve content on your domain — which means
+cookies scoped to the parent domain, a credible phishing surface, and in some
+setups a session-fixation path.
+
+Scan committed DNS and IaC descriptors (`aws_route53_record`, `*.tf`, zone
+files, `CNAME` files) for delegations to `*.herokuapp.com`, `*.s3-website-*`,
+`*.github.io`, `*.azurewebsites.net`, `*.cloudfront.net`, `*.netlify.app`,
+`*.pages.dev`, `*.fastly.net`, and similar, where the backing resource is not
+also declared in the same repository.
+
+Report it as a dangling-delegation risk. Do **not** claim an active takeover you
+have not reproduced — that verdict belongs to `/ray-detonator`.
 
 ______________________________________________________________________
 

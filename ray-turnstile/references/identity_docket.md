@@ -13,6 +13,7 @@ severity default before `ray-gauge` applies its caps.
 - [5. MFA and Anti-Automation](#5-mfa-and-anti-automation)
 - [6. Account Recovery, Invites, and Enumeration](#6-account-recovery-invites-and-enumeration)
 - [7. Federated Identity (OAuth 2.0 / OIDC / SAML)](#7-federated-identity-oauth-20--oidc--saml)
+- [7b. Secrets And Critical-Operation Integrity](#7b-secrets-and-critical-operation-integrity)
 - [8. Control Ledger IDs](#8-control-ledger-ids)
 
 ______________________________________________________________________
@@ -196,6 +197,52 @@ ______________________________________________________________________
 | Account linking | Only on a **verified** email, or with an explicit confirmation step | Auto-linking by unverified email lets an attacker with an IdP account claim an existing local account | HIGH |
 | Scope handling | Minimum scopes; downstream tokens not over-privileged | Requesting broad provider scopes the app does not use | LOW |
 | SAML | Signature verified over the assertion, `Recipient`/`Audience`/`NotOnOrAfter` checked, XML canonicalization handled by a maintained library | Home-rolled XML parsing (signature wrapping), unsigned assertions accepted | HIGH |
+
+______________________________________________________________________
+
+## 7b. Secrets And Critical-Operation Integrity
+
+### Secrets
+
+| Control | Expected | Failing shape |
+|---|---|---|
+| No committed secrets | Nothing in source, config, notebooks, fixtures, CI files, Dockerfiles, or manifests — **and nothing in VCS history**, which is checked via the Block A step 5 carve-out in the live repo root | A private key, cloud credential, or signing secret in any of the above. A secret removed in a later commit is still exposed |
+| No insecure defaults | The process refuses to start without the secret | `process.env.JWT_SECRET \|\| 'dev'`, `SECRET_KEY = "changeme"`, a committed `.env.example` whose values are the real ones. **The fallback is the finding**, because a misconfigured deploy silently takes it and nothing appears broken |
+| Key strength | ≥256 bits from a CSPRNG for signing keys | A dictionary word or a short string — offline-crackable from one captured token |
+| Runtime sourcing | Fetched at startup from a secret manager via a workload identity | Static keys on disk or baked into an image layer |
+| Rotation | Key id in the token plus an overlap window, so rotation does not invalidate every session at once | No rotation path — which guarantees a leaked key stays in use |
+| Scope | One secret per consumer | One shared secret, so revocation is an outage everywhere |
+
+**Every leaked-secret finding must state in `mitigation` that the credential is
+compromised and must be rotated.** Removing it from history is housekeeping, not
+remediation — and a reader who takes away the wrong lesson is left with a live
+credential they believe is dead.
+
+### Critical-operation integrity
+
+Duplicate execution of a value-creating operation is a security defect, not just
+a correctness one. Enumerate the operations where running twice creates value or
+crosses a limit — coupon redemption, balance withdrawal, credit consumption,
+seat assignment, invite acceptance, plan upgrade, referral bonus, quota check —
+and check each for one of these:
+
+| Control | Shape |
+|---|---|
+| Transaction with a lock | `BEGIN; SELECT … FOR UPDATE; …; COMMIT` |
+| Atomic conditional write | `UPDATE accounts SET balance = balance - $1 WHERE id = $2 AND balance >= $1` |
+| Database constraint | A unique index on `(user_id, coupon_id)` — enforcement below the application |
+| Idempotency key | A client-supplied key stored with the result, so a retry returns the first outcome |
+
+The failing shape is a `SELECT` to check, then a separate `UPDATE` to act, with
+no transaction around them: a time-of-check/time-of-use window that a double
+click or a concurrent request walks straight through. Report it with both line
+numbers.
+
+Verify the constraint lives in the **database**, not only in application code —
+an in-process mutex or a cached flag is defeated by a second instance, which is
+exactly the configuration production runs in. Also note state machines that
+allow a backwards transition (refund after refund, activation after
+cancellation).
 
 ______________________________________________________________________
 

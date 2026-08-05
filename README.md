@@ -161,6 +161,8 @@ graph LR
 
 <p><strong>They are drop-in siblings of <code>ray-prospector</code>.</strong> Each one writes standard finding JSON to <code>workspace/findings/&lt;uuid&gt;.json</code> — same schema, same <code>signature</code>/<code>lineage_id</code>/<code>discovery_commit</code> rules, same snapshot pinning — so <code>ray-condenser</code> through <code>ray-chronicle</code> consume their output unchanged. They can run in place of, or alongside, the generic audit stage.</p>
 
+<p><strong>Each skill is structured for progressive disclosure.</strong> The <code>SKILL.md</code> carries the workflow and the pointers; the detail lives in <code>references/</code> and is read only when a step calls for it. Every skill ships a <code>findings_contract.md</code> (schema, the four computed fields, CWE set, evidence discipline, severity defaults, ledger format) plus one or more domain dockets. That keeps the always-loaded body around 200&ndash;280 lines while the obligation sets behind it stay as long as they need to be.</p>
+
 <p>Each also writes a <strong>control ledger</strong> to <code>workspace/ledgers/&lt;skill&gt;.json</code>, recording every control that was checked and its state (<code>PRESENT</code>, <code>PARTIAL</code>, <code>ABSENT</code>, <code>NOT_APPLICABLE</code>, <code>UNKNOWN</code>). This is what makes the <em>absence</em> of a finding meaningful: a control marked <code>NOT_APPLICABLE</code> with a stated reason is a documented security decision; a silent omission is not.</p>
 
 <table>
@@ -177,43 +179,43 @@ graph LR
       <td><strong><code>ray-custodian</code></strong></td>
       <td>Data protection</td>
       <td>Personal-data inventory, TLS and response headers, cookie flags, consent ordering, retention, data-subject rights, and third-party PII egress (LGPD/GDPR).</td>
-      <td><code>privacy_docket.md</code>, <code>web_surface_baseline.md</code></td>
+      <td><code>privacy_docket.md</code><br/><code>web_surface_baseline.md</code><br/><code>findings_contract.md</code></td>
     </tr>
     <tr>
       <td><strong><code>ray-turnstile</code></strong></td>
       <td>SaaS identity &amp; tenancy</td>
       <td>Credential storage, sessions and JWTs, MFA and credential stuffing, recovery flows, IDOR/BOLA/BFLA authorization, tenant isolation, secrets, and races on critical operations.</td>
-      <td><code>identity_docket.md</code>, <code>tenancy_isolation.md</code></td>
+      <td><code>identity_docket.md</code><br/><code>tenancy_isolation.md</code><br/><code>findings_contract.md</code></td>
     </tr>
     <tr>
       <td><strong><code>ray-crucible</code></strong></td>
       <td>Untrusted input</td>
       <td>Sink-driven sweep of the OWASP canon: injection, XSS, CSRF, SSRF, deserialization, traversal, upload, redirect, prototype pollution, timing, and dependencies.</td>
-      <td><code>injection_docket.md</code>, <code>owasp_mapping.md</code></td>
+      <td><code>injection_docket.md</code><br/><code>owasp_mapping.md</code><br/><code>findings_contract.md</code></td>
     </tr>
     <tr>
       <td><strong><code>ray-seam</code></strong></td>
       <td>Client/server trust seam</td>
       <td>Error leakage and fail-open paths, backend validation, mass assignment, CORS, client-side credential storage, bundle secrets, log hygiene, limits, caching, and client-supplied values.</td>
-      <td>&mdash;</td>
+      <td><code>seam_docket.md</code><br/><code>findings_contract.md</code></td>
     </tr>
     <tr>
       <td><strong><code>ray-sentry</code></strong></td>
       <td>Service protection</td>
       <td>Rate limiting by cost class, exposed internal endpoints, service-to-service auth, API key lifecycle, GraphQL limits, webhook signatures, audit logging, and alerting.</td>
-      <td>&mdash;</td>
+      <td><code>service_docket.md</code><br/><code>findings_contract.md</code></td>
     </tr>
     <tr>
       <td><strong><code>ray-vault</code></strong></td>
       <td>Datastore exfiltration</td>
       <td>Database privileges, network reachability, encryption in transit/at rest/at field level, credential sourcing, backups and restore testing, non-production copies, and data-layer auditing.</td>
-      <td><code>datastore_hardening.md</code></td>
+      <td><code>datastore_hardening.md</code><br/><code>findings_contract.md</code></td>
     </tr>
     <tr>
       <td><strong><code>ray-citadel</code></strong></td>
       <td>Architecture at scale</td>
       <td>Network layering, statelessness, environment isolation, secret topology, pipeline and supply-chain integrity, container and Kubernetes hardening, observability, and incident readiness.</td>
-      <td><code>architecture_baseline.md</code></td>
+      <td><code>architecture_baseline.md</code><br/><code>findings_contract.md</code></td>
     </tr>
   </tbody>
 </table>
@@ -292,7 +294,7 @@ graph LR
 
 <ul>
   <li><strong>Core Pipeline:</strong> 14 skills are fully implemented and internally consistent.</li>
-  <li><strong>Domain Audit Suite:</strong> 7 skills (<code>ray-custodian</code>, <code>ray-turnstile</code>, <code>ray-crucible</code>, <code>ray-seam</code>, <code>ray-sentry</code>, <code>ray-vault</code>, <code>ray-citadel</code>) implemented against the shared findings contract, 5 of them with dedicated reference dockets.</li>
+  <li><strong>Domain Audit Suite:</strong> 7 skills (<code>ray-custodian</code>, <code>ray-turnstile</code>, <code>ray-crucible</code>, <code>ray-seam</code>, <code>ray-sentry</code>, <code>ray-vault</code>, <code>ray-citadel</code>) implemented against the shared findings contract, each with a <code>references/</code> directory holding its findings contract and domain dockets.</li>
   <li><strong>Pending Components:</strong> Patch generation (<code>ray-anvil</code>), exploit chaining (<code>ray-cascade</code>), VCS history extraction (<code>ray-ledger</code>), and the reference orchestrator (<code>ray-conductor</code>). Contributions for these components are welcome.</li>
 </ul>
 

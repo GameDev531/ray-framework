@@ -8,12 +8,73 @@ regression test that makes the control durable.
 
 ## Table of Contents
 
+- [0. The Three Authorization Layers](#0-the-three-authorization-layers)
 - [1. Isolation Models](#1-isolation-models)
 - [2. Auditing Shared-Schema Isolation](#2-auditing-shared-schema-isolation)
 - [3. Row-Level Security Footguns](#3-row-level-security-footguns)
 - [4. Isolation Beyond The Primary Database](#4-isolation-beyond-the-primary-database)
 - [5. The Regression Test](#5-the-regression-test)
 - [6. Control Ledger IDs](#6-control-ledger-ids)
+
+______________________________________________________________________
+
+## 0. The Three Authorization Layers
+
+Authorization fails at three levels that are independent of each other. A
+codebase can enforce one perfectly and none of the others, which is why a single
+"is authorization implemented?" question produces useless answers.
+
+### Object level (IDOR / BOLA — API1:2023)
+
+Every handler that reads an identifier from request input — path, query, body,
+or header — must scope the lookup to the principal.
+
+| | Shape |
+|---|---|
+| Expected | `WHERE id = $1 AND tenant_id = $2`, or a policy check between the fetch and the response |
+| Failing | Fetch by id, then return. The "authorization" is that the UI never shows other ids |
+| Trap | UUIDs are **not** a substitute for the check. Unguessable ids still leak through referrers, logs, exports, and shared links. When a comment claims otherwise, say so explicitly in the finding |
+| Trap | Writes and deletes are audited separately from reads. A scoped `GET` beside an unscoped `DELETE` is common and worse |
+
+### Function level (BFLA — API5:2023)
+
+Privileged operations reachable by an unprivileged principal.
+
+- Admin routers mounted without a guard.
+- Role checks present in the UI but not on the API.
+- Method-specific gaps: `GET` guarded, `PATCH` not.
+- GraphQL mutations that bypass the REST middleware entirely.
+- A guard applied to `/admin/*` but not to the same handler mounted elsewhere.
+
+### Property level (BOPLA — API3:2023)
+
+Both directions of the same mistake.
+
+**Inbound (mass assignment).** `User.update(req.body)`,
+`Object.assign(user, req.body)`, `**request.data`,
+`assign_attributes(params)`, `patchValue(...)`. Verify there is an explicit
+field allowlist and that none of these are settable from input:
+
+```
+role, is_admin, permissions, scopes
+tenant_id, org_id, account_id, owner_id, user_id
+plan, subscription, seats, quota, credits, balance
+verified, email_verified, status, state
+price, amount, discount, total
+created_at, id
+```
+
+**Outbound (over-serialization).** A serializer that dumps the model: password
+hashes, reset tokens, internal notes, soft-deleted rows, other users' ids.
+The tell is a response carrying far more than the screen displays.
+
+### Where all three are commonly skipped
+
+The middleware protects the HTTP path and nothing else. Sweep these separately,
+every time: background jobs, queue consumers, scheduled tasks, export and report
+generators, webhook handlers, GraphQL resolvers, batch and bulk endpoints,
+admin CLI commands, and internal tooling (Django admin, ActiveAdmin, Retool
+configurations, a `scripts/` directory).
 
 ______________________________________________________________________
 
