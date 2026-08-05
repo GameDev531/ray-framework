@@ -47,7 +47,9 @@ graph LR
     C --> D[ray-perimeter<br/><sub>threat model</sub>]
     D --> E[ray-compass<br/><sub>review plan</sub>]
     E --> F[ray-prospector<br/><sub>code audit</sub>]
+    E --> N[domain audit suite<br/><sub>7 specialized sweeps</sub>]
     F --> G[ray-condenser<br/><sub>dedupe</sub>]
+    N --> G
     G --> H[ray-arbiter<br/><sub>adversarial review</sub>]
     H --> I[ray-magistrate<br/><sub>viability judge</sub>]
     I --> J[ray-detonator<br/><sub>PoC + reproduce</sub>]
@@ -57,8 +59,10 @@ graph LR
     
     classDef default fill:#1a1a24,stroke:#4a4a6a,stroke-width:2px,color:#fff;
     classDef meta fill:#2a1a3a,stroke:#6a4a8a,stroke-width:2px,color:#fff;
+    classDef domain fill:#1a2a24,stroke:#4a8a6a,stroke-width:2px,color:#fff;
     class M meta;
     class A meta;
+    class N domain;
 ```
 
 <hr />
@@ -151,6 +155,83 @@ graph LR
 
 <hr />
 
+<h2>The Domain Audit Suite</h2>
+
+<p>The core pipeline is domain-agnostic: it maps, plans, audits, validates, reproduces, and scores whatever the codebase happens to be. The domain audit suite adds seven specialized discovery stages, each carrying a single security domain's obligation set so the rest of the pipeline does not have to.</p>
+
+<p><strong>They are drop-in siblings of <code>ray-prospector</code>.</strong> Each one writes standard finding JSON to <code>workspace/findings/&lt;uuid&gt;.json</code> — same schema, same <code>signature</code>/<code>lineage_id</code>/<code>discovery_commit</code> rules, same snapshot pinning — so <code>ray-condenser</code> through <code>ray-chronicle</code> consume their output unchanged. They can run in place of, or alongside, the generic audit stage.</p>
+
+<p>Each also writes a <strong>control ledger</strong> to <code>workspace/ledgers/&lt;skill&gt;.json</code>, recording every control that was checked and its state (<code>PRESENT</code>, <code>PARTIAL</code>, <code>ABSENT</code>, <code>NOT_APPLICABLE</code>, <code>UNKNOWN</code>). This is what makes the <em>absence</em> of a finding meaningful: a control marked <code>NOT_APPLICABLE</code> with a stated reason is a documented security decision; a silent omission is not.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Skill</th>
+      <th>Domain</th>
+      <th>Description</th>
+      <th>References</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong><code>ray-custodian</code></strong></td>
+      <td>Data protection</td>
+      <td>Personal-data inventory, TLS and response headers, cookie flags, consent ordering, retention, data-subject rights, and third-party PII egress (LGPD/GDPR).</td>
+      <td><code>privacy_docket.md</code>, <code>web_surface_baseline.md</code></td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-turnstile</code></strong></td>
+      <td>SaaS identity &amp; tenancy</td>
+      <td>Credential storage, sessions and JWTs, MFA and credential stuffing, recovery flows, IDOR/BOLA/BFLA authorization, tenant isolation, secrets, and races on critical operations.</td>
+      <td><code>identity_docket.md</code>, <code>tenancy_isolation.md</code></td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-crucible</code></strong></td>
+      <td>Untrusted input</td>
+      <td>Sink-driven sweep of the OWASP canon: injection, XSS, CSRF, SSRF, deserialization, traversal, upload, redirect, prototype pollution, timing, and dependencies.</td>
+      <td><code>injection_docket.md</code>, <code>owasp_mapping.md</code></td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-seam</code></strong></td>
+      <td>Client/server trust seam</td>
+      <td>Error leakage and fail-open paths, backend validation, mass assignment, CORS, client-side credential storage, bundle secrets, log hygiene, limits, caching, and client-supplied values.</td>
+      <td>&mdash;</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-sentry</code></strong></td>
+      <td>Service protection</td>
+      <td>Rate limiting by cost class, exposed internal endpoints, service-to-service auth, API key lifecycle, GraphQL limits, webhook signatures, audit logging, and alerting.</td>
+      <td>&mdash;</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-vault</code></strong></td>
+      <td>Datastore exfiltration</td>
+      <td>Database privileges, network reachability, encryption in transit/at rest/at field level, credential sourcing, backups and restore testing, non-production copies, and data-layer auditing.</td>
+      <td><code>datastore_hardening.md</code></td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-citadel</code></strong></td>
+      <td>Architecture at scale</td>
+      <td>Network layering, statelessness, environment isolation, secret topology, pipeline and supply-chain integrity, container and Kubernetes hardening, observability, and incident readiness.</td>
+      <td><code>architecture_baseline.md</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Running a Domain Sweep</h3>
+
+<pre><code>/ray-custodian    # privacy and web-surface exposure
+/ray-turnstile    # identity, authorization, tenancy
+/ray-crucible     # untrusted-input canon
+/ray-seam         # client/server trust boundary
+/ray-sentry       # abuse resistance and detection
+/ray-vault        # datastore exfiltration barriers
+/ray-citadel      # deployed architecture</code></pre>
+
+<p>Run whichever domains the target actually has, then continue into <code>/ray-condenser</code> and the rest of the validation chain exactly as with a generic pass. Domains overlap deliberately at their edges (each <code>SKILL.md</code> ends with a <em>Boundary With Adjacent Skills</em> section); overlapping findings are merged by <code>ray-condenser</code>, never lost.</p>
+
+<hr />
+
 <h2>Design Principles</h2>
 
 <ol>
@@ -159,6 +240,7 @@ graph LR
   <li><strong>Strictly advisory accelerators.</strong> Optional components (such as semantic retrieval or structural indexing) may reorder workloads but cannot authorize the skipping of files or call-sites.</li>
   <li><strong>Fail conservative.</strong> When a stage cannot confidently ascertain a result, it routes to <code>NEEDS_RESEARCH</code>, <code>not_attempted</code>, or <code>UNKNOWN</code>. It never issues a false positive clearance.</li>
   <li><strong>Token-efficient state management.</strong> State resides on disk via UUID-keyed JSON objects. Agents communicate via references rather than transmitting extensive text payloads.</li>
+  <li><strong>Coverage is recorded, not implied.</strong> Domain stages write a control ledger listing every control checked and its state. A control that does not apply is marked so, with a reason; the absence of a finding is only meaningful when the check is on record.</li>
 </ol>
 
 <hr />
@@ -191,6 +273,8 @@ graph LR
 /ray-perimeter    # Construct the threat model
 /ray-compass      # Generate workspace/plan.json
 /ray-prospector   # Execute audit and populate workspace/findings/*.json
+                  # (optionally add domain sweeps here: /ray-custodian, /ray-turnstile,
+                  #  /ray-crucible, /ray-seam, /ray-sentry, /ray-vault, /ray-citadel)
 /ray-condenser    # Deduplicate findings
 /ray-arbiter      # Validate findings
 /ray-magistrate   # Assess production viability
@@ -208,6 +292,7 @@ graph LR
 
 <ul>
   <li><strong>Core Pipeline:</strong> 14 skills are fully implemented and internally consistent.</li>
+  <li><strong>Domain Audit Suite:</strong> 7 skills (<code>ray-custodian</code>, <code>ray-turnstile</code>, <code>ray-crucible</code>, <code>ray-seam</code>, <code>ray-sentry</code>, <code>ray-vault</code>, <code>ray-citadel</code>) implemented against the shared findings contract, 5 of them with dedicated reference dockets.</li>
   <li><strong>Pending Components:</strong> Patch generation (<code>ray-anvil</code>), exploit chaining (<code>ray-cascade</code>), VCS history extraction (<code>ray-ledger</code>), and the reference orchestrator (<code>ray-conductor</code>). Contributions for these components are welcome.</li>
 </ul>
 
