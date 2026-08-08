@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "ray",
   "displayName": "Ray Framework",
-  "version": "0.1.0",
-  "description": "An agentic, evidence-first security review pipeline: 21 composable skills that map a codebase, build a threat model, audit it across seven security domains, then validate, reproduce, and score every finding before it reaches a report.",
+  "version": "0.2.0",
+  "description": "An agentic, evidence-first security review pipeline: 22 composable skills that map a codebase, build a threat model, audit it across seven security domains, validate, reproduce, and score every finding — plus a live red-team/blue-team loop (ray-siege) that attacks a disposable local instance for real and patches it until it holds.",
   "author": {
     "name": "GameDev531",
     "url": "https://github.com/GameDev531"
@@ -20,7 +20,10 @@
     "gdpr",
     "threat-model",
     "code-audit",
-    "appsec"
+    "appsec",
+    "red-team",
+    "blue-team",
+    "dast"
   ],
   "skills": [
     "./ray-lattice",
@@ -43,6 +46,7 @@
     "./ray-gauge",
     "./ray-chronicle",
     "./ray-retrospective",
-    "./ray-foundry"
+    "./ray-foundry",
+    "./ray-siege"
   ]
 }

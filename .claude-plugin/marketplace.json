@@ -7,14 +7,14 @@
   },
   "metadata": {
     "description": "The Ray Framework marketplace: an evidence-first security review pipeline distributed as one installable plugin.",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "ray",
       "source": "./",
       "description": "The full Ray Framework: 21 security-review skills spanning codebase mapping, threat modeling, the seven-domain audit suite, adversarial validation, sandboxed reproduction, risk scoring, and reporting.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "keywords": [
         "security",
         "owasp",

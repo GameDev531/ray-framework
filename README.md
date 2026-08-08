@@ -234,6 +234,44 @@ graph LR
 
 <hr />
 
+<h2>The Live Adversary Loop (<code>ray-siege</code>)</h2>
+
+<p>Every stage above reasons about a <strong>frozen snapshot</strong>. <code>ray-siege</code> is the one that leaves the snapshot behind: after you have built a security-sensitive project, it stands up a <strong>disposable local instance</strong> and runs a red-team / blue-team loop against the app while it is actually running &mdash; attacking for real, patching, and re-attacking until the app holds.</p>
+
+<table>
+  <thead>
+    <tr><th>Component</th><th>Role</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong><code>ray-siege</code></strong></td>
+      <td>Orchestrator skill</td>
+      <td>Stands up the disposable local target with a throwaway database and seeded canaries, then drives the loop round by round, keeping all state in a siege ledger on disk.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-reaver</code></strong></td>
+      <td>Red-team subagent</td>
+      <td>A senior offensive engineer that breaks in <em>for real</em> across the classes the seven dockets enumerate, and proves every break-in with a harmless canary &mdash; not a diagnosis, an actual compromise.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-bulwark</code></strong></td>
+      <td>Blue-team subagent</td>
+      <td>A senior developer that writes the minimal, idiomatic fix for each proven hole, commits it to a dedicated siege branch, and touches nothing else.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The loop reuses the machinery Ray already had rather than reinventing it: <code>ray-detonator</code>'s sandbox isolation and execution-evidence gate, its <code>--reattack</code> variant-hunting (&ge;3 boundary-mutated variants so a patch can't be overfit), and the <code>repro_status</code> / <code>reattack_status</code> / <code>patch_status</code> enums. The two roles run as <strong>isolated subagents</strong> &mdash; separate context windows are what keep each locked in character.</p>
+
+<p><strong>Safety is fail-closed and non-negotiable.</strong> The target must resolve to loopback on a disposable instance the skill itself stood up; a non-local target stops the siege. Destructive techniques are prohibited outright (no DoS, no data destruction, no persistence, no exfiltration to real hosts); every break-in is proven with an inert canary. This is authorized defensive tooling &mdash; it attacks only the user's own project, locally, to find and close holes.</p>
+
+<pre><code>/ray-siege        # after building the project: attack the running local app and harden it in a loop
+                  # (delegates to the ray-reaver and ray-bulwark subagents)</code></pre>
+
+<p>It stops on a <strong>clean round</strong> (a full attack pass gets in nowhere and every prior hole is re-verified closed) or a safety cap on rounds, then writes a siege report and leaves the patch branch for you to review and merge.</p>
+
+<hr />
+
 <h2>Design Principles</h2>
 
 <ol>
@@ -258,7 +296,7 @@ graph LR
 <pre><code>/plugin marketplace add GameDev531/ray-framework
 /plugin install ray@ray-framework</code></pre>
 
-<p>All 21 skills register at once and become available as <code>/ray-*</code> commands (and trigger automatically by description). Update later with <code>/plugin marketplace update ray-framework</code>. The always-on cost is deliberately small — each skill's <code>SKILL.md</code> body is a lean workflow, and its detailed reference dockets load only when the skill is invoked.</p>
+<p>All 22 skills register at once (plus the <code>ray-reaver</code> and <code>ray-bulwark</code> subagents that <code>ray-siege</code> drives) and become available as <code>/ray-*</code> commands, triggering automatically by description. Update later with <code>/plugin marketplace update ray-framework</code>. The always-on cost is deliberately small — each skill's <code>SKILL.md</code> body is a lean workflow, and its detailed reference dockets load only when the skill is invoked.</p>
 
 <h3>Manual install (Gemini, Codex, Cursor, Antigravity, or Claude without the plugin)</h3>
 
@@ -303,10 +341,11 @@ graph LR
 <h2>Status</h2>
 
 <ul>
-  <li><strong>Packaging:</strong> Installs as a Claude Code plugin (<code>ray@ray-framework</code>) via the bundled <code>.claude-plugin/</code> marketplace; validated with <code>claude plugin validate --strict</code>, all 21 skills load.</li>
+  <li><strong>Packaging:</strong> Installs as a Claude Code plugin (<code>ray@ray-framework</code>) via the bundled <code>.claude-plugin/</code> marketplace; validated with <code>claude plugin validate --strict</code>, all 22 skills and 2 subagents load.</li>
   <li><strong>Core Pipeline:</strong> 14 skills are fully implemented and internally consistent.</li>
   <li><strong>Domain Audit Suite:</strong> 7 skills (<code>ray-custodian</code>, <code>ray-turnstile</code>, <code>ray-crucible</code>, <code>ray-seam</code>, <code>ray-sentry</code>, <code>ray-vault</code>, <code>ray-citadel</code>) implemented against the shared findings contract, each with a <code>references/</code> directory holding its findings contract and domain dockets.</li>
-  <li><strong>Pending Components:</strong> Patch generation (<code>ray-anvil</code>), exploit chaining (<code>ray-cascade</code>), VCS history extraction (<code>ray-ledger</code>), and the reference orchestrator (<code>ray-conductor</code>). Contributions for these components are welcome.</li>
+  <li><strong>Live Adversary Loop:</strong> <code>ray-siege</code> plus the <code>ray-reaver</code> (red) and <code>ray-bulwark</code> (blue) subagents &mdash; a fail-closed, local-only red-team/blue-team loop that reuses <code>ray-detonator</code>'s sandbox and re-attack machinery.</li>
+  <li><strong>Pending Components:</strong> Exploit chaining (<code>ray-cascade</code>), VCS history extraction (<code>ray-ledger</code>), and the reference orchestrator (<code>ray-conductor</code>). Standalone patch generation (<code>ray-anvil</code>) remains pending for the static pipeline, though <code>ray-siege</code> now performs live patching in its loop. Contributions welcome.</li>
 </ul>
 
 <h2>License</h2>
