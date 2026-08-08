@@ -7,21 +7,25 @@
   },
   "metadata": {
     "description": "The Ray Framework marketplace: an evidence-first security review pipeline distributed as one installable plugin.",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "plugins": [
     {
       "name": "ray",
       "source": "./",
-      "description": "The full Ray Framework: 25 skills and 3 subagents spanning codebase mapping, threat modeling, the domain audit suite (web + memory-safety + AI/LLM), adversarial validation, sandboxed reproduction, risk scoring and reporting, a live red-team/blue-team loop, and a high-precision general code-review skill.",
-      "version": "0.3.0",
+      "description": "The full Ray Framework: 27 skills and 4 subagents spanning codebase mapping, threat modeling, the domain audit suite (web + memory-safety + AI/LLM), adversarial validation, sandboxed reproduction, risk scoring and reporting, a live red-team/blue-team loop, external attack-surface recon, a tiered-autonomy detection-and-response analyst, and a high-precision general code-review skill.",
+      "version": "0.4.0",
       "keywords": [
         "security",
         "owasp",
         "lgpd",
         "gdpr",
         "threat-model",
-        "appsec"
+        "appsec",
+        "red-team",
+        "blue-team",
+        "reconnaissance",
+        "incident-response"
       ]
     }
   ]

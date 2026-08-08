@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "ray",
   "displayName": "Ray Framework",
-  "version": "0.3.0",
-  "description": "An agentic, evidence-first security review pipeline: 25 composable skills that map a codebase, build a threat model, audit it across security domains (web, memory-safety, and AI/LLM), validate, reproduce, and score every finding — plus a live red-team/blue-team loop (ray-siege) and a high-precision general code-review skill (ray-loupe), with agents that keep curated cross-run memory.",
+  "version": "0.4.0",
+  "description": "An agentic, evidence-first security review pipeline: 27 composable skills that map a codebase, build a threat model, audit it across security domains (web, memory-safety, and AI/LLM), validate, reproduce, and score every finding — plus a live red-team/blue-team loop (ray-siege), external attack-surface recon (ray-quarry), a tiered-autonomy detection-and-response analyst (ray-warden), and a high-precision general code-review skill (ray-loupe), with agents that keep curated cross-run memory.",
   "author": {
     "name": "GameDev531",
     "url": "https://github.com/GameDev531"
@@ -26,7 +26,12 @@
     "dast",
     "code-review",
     "memory-safety",
-    "llm-security"
+    "llm-security",
+    "reconnaissance",
+    "attack-surface",
+    "osint",
+    "incident-response",
+    "detection"
   ],
   "skills": [
     "./ray-lattice",
@@ -53,6 +58,8 @@
     "./ray-siege",
     "./ray-marrow",
     "./ray-oracle",
-    "./ray-loupe"
+    "./ray-loupe",
+    "./ray-quarry",
+    "./ray-warden"
   ]
 }

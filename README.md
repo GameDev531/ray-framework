@@ -250,6 +250,20 @@ graph LR
 
 <hr />
 
+<h2>External Attack-Surface Recon (<code>ray-quarry</code>)</h2>
+
+<p>Before the pipeline reasons about a snapshot, an attacker learns what your surface leaks. <code>ray-quarry</code> measures that first: it maps the external footprint of assets you <strong>own or are explicitly authorized to assess</strong> &mdash; the hostnames and certificates that name your estate, the services and software versions at its edge, and the quiet leaks (a username and an internal file path baked into a published PDF's metadata, an API key committed to your own repo) that hand an attacker a foothold for free.</p>
+
+<p>It is <strong>passive-first</strong>: DNS, certificate-transparency logs, WHOIS/RDAP, published-document metadata, and your own repos are read without sending anything intrusive to the target. Bounded <strong>active</strong> enumeration (port/service and version fingerprinting, non-exploit template checks) runs only against hosts the scope file marks <code>active_ok</code>. The FOCA-style document-metadata method ships as a <strong>dependency-free extractor</strong> (<code>scripts/ray_metadata.py</code>, stdlib only) that reads PDF <code>/Info</code>+XMP, Office <code>docProps</code>, and image EXIF, then harvests leaked paths, usernames, and internal hosts &mdash; so the highest-signal recon works even in a bare environment.</p>
+
+<p><strong>Authorization is fail-closed.</strong> Recon runs only against a signed <strong>scope attestation</strong> the user owns; every asset touched must resolve to an attested entry, and there is no override for out-of-scope targets. The restraint rules are invariants: <strong>no mass-targeting, no DoS, no exploitation, no evasion</strong> &mdash; <code>ray-quarry</code> observes the surface, it never attacks it. Findings feed <code>ray-perimeter</code> (a <em>measured</em> threat model), and an in-scope host you can stand up locally feeds <code>ray-siege</code>.</p>
+
+<pre><code>/ray-quarry --scope_file=scope.yaml                 # passive footprint of an attested surface
+/ray-quarry --scope_file=scope.yaml --mode=active   # + bounded enumeration of active_ok hosts
+/ray-quarry --docs=./published --repo_root=.        # mine document metadata and scan own repo for secrets</code></pre>
+
+<hr />
+
 <h2>The Live Adversary Loop (<code>ray-siege</code>)</h2>
 
 <p>Every stage above reasons about a <strong>frozen snapshot</strong>. <code>ray-siege</code> is the one that leaves the snapshot behind: after you have built a security-sensitive project, it stands up a <strong>disposable local instance</strong> and runs a red-team / blue-team loop against the app while it is actually running &mdash; attacking for real, patching, and re-attacking until the app holds.</p>
@@ -288,6 +302,37 @@ graph LR
 
 <hr />
 
+<h2>Detection &amp; Response Analyst (<code>ray-warden</code>)</h2>
+
+<p>Where <code>ray-siege</code>'s blue team fixes the <em>code</em>, <code>ray-warden</code> detects and responds to the <em>exploitation</em> of a running estate. It is the analyst <strong>brain</strong>, not a SOC platform: it plugs into whatever signals and tools the environment has and supplies the disciplined reasoning &mdash; the same triage every time, corroboration before belief, confidence before action, and a human on every irreversible decision.</p>
+
+<table>
+  <thead>
+    <tr><th>Component</th><th>Role</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong><code>ray-warden</code></strong></td>
+      <td>Orchestrator skill</td>
+      <td>Ingests alerts, opens one case per correlated incident, dispatches the analyst, then drives a <strong>tiered, audited</strong> response &mdash; keeping the circuit-breaker and audit state on disk.</td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-vigil</code></strong></td>
+      <td>Analyst subagent</td>
+      <td>A senior SOC analyst that runs the class playbook, correlates multi-source signals read-only, and returns a <strong>verdict + confidence + key signal + tier-appropriate recommendation</strong> &mdash; it never executes containment itself.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Autonomy is bounded by what is reversible and certain.</strong> Read-only enrichment (<strong>Tier&nbsp;1</strong>) is autonomous; reversible containment (<strong>Tier&nbsp;2</strong>, e.g. revoke one session, isolate one host) runs autonomously only within an operator <strong>allowlist</strong>, under a <strong>circuit breaker</strong>, and only at high confidence &mdash; every action records its rollback before it runs; anything irreversible or mass-scale (<strong>Tier&nbsp;3</strong>) is <strong>always</strong> handed to a human with a decision packet. Every action &mdash; proposed, taken, or rolled back &mdash; lands in an append-only audit log. Hostile material (phishing bodies, malware strings, attacker-controlled logs) is treated as <strong>data, never instructions</strong>; severity and confidence are scored on separate axes so a high-stakes, low-certainty case escalates fast but is never contained on a coin-flip.</p>
+
+<pre><code>/ray-warden --alerts=./alerts.json                                   # investigate &amp; propose (default)
+/ray-warden --alerts=./alerts.json --allowlist=resp.yaml --mode=respond  # + autonomous reversible containment</code></pre>
+
+<p>An unattended 24/7 autonomous SOC is a different product with a different risk posture; <code>ray-warden</code> is honest about being the reasoning core a human or a harness drives, with the authority gate always closed around it.</p>
+
+<hr />
+
 <h2>General Code Review (<code>ray-loupe</code>)</h2>
 
 <p>Ray is security-first, but a change also needs a plain, thorough code review. <code>ray-loupe</code> is a high-precision general reviewer — the review counterpart to the security pipeline. It reviews a working-tree diff, a branch range, a commit, or a file scan across the full taxonomy: <strong>correctness, security (triage), performance, maintainability, tests, style, and documentation</strong>.</p>
@@ -313,7 +358,7 @@ graph LR
 
 <h2>Curated Agent Memory</h2>
 
-<p>The framework's subagents keep a <strong>curated, global memory</strong> that persists and compounds across every run and every project, so they get sharper over time: <code>ray-reaver</code> remembers attack techniques that worked and defenses that blocked it, <code>ray-bulwark</code> remembers the fixes that held and the over-narrow patches that got bypassed, and <code>ray-scrivener</code> remembers a project's house style and recurring defects.</p>
+<p>The framework's subagents keep a <strong>curated, global memory</strong> that persists and compounds across every run and every project, so they get sharper over time: <code>ray-reaver</code> remembers attack techniques that worked and defenses that blocked it, <code>ray-bulwark</code> remembers the fixes that held and the over-narrow patches that got bypassed, <code>ray-scrivener</code> remembers a project's house style and recurring defects, and <code>ray-vigil</code> remembers the false-positive patterns to stop crying wolf on and the true-positive tells it under-weighted &mdash; human confirmations and overturns being the highest-value lesson it keeps.</p>
 
 <p>It is a deliberately small, local, free layer (<code>scripts/ray_memory.py</code>, stdlib only) with a firm boundary: memory is born <strong>only</strong> from the agent's own work — never ingested from email, files, or history — follows a NOTICE&nbsp;&rarr;&nbsp;FILE&nbsp;&rarr;&nbsp;RECALL loop, and a hard character cap forces high signal over a data dump. Files live at <code>~/.claude/ray-memory/&lt;agent&gt;.md</code>. The full contract, and an optional future SQLite/FTS5 layer, are documented in <code>scripts/ray-memory.md</code>.</p>
 
@@ -343,7 +388,7 @@ graph LR
 <pre><code>/plugin marketplace add GameDev531/ray-framework
 /plugin install ray@ray-framework</code></pre>
 
-<p>All 25 skills register at once (plus the <code>ray-reaver</code>, <code>ray-bulwark</code>, and <code>ray-scrivener</code> subagents) and become available as <code>/ray-*</code> commands, triggering automatically by description. Update later with <code>/plugin marketplace update ray-framework</code>. The always-on cost is deliberately small — each skill's <code>SKILL.md</code> body is a lean workflow, and its detailed reference dockets load only when the skill is invoked.</p>
+<p>All 27 skills register at once (plus the <code>ray-reaver</code>, <code>ray-bulwark</code>, <code>ray-scrivener</code>, and <code>ray-vigil</code> subagents) and become available as <code>/ray-*</code> commands, triggering automatically by description. Update later with <code>/plugin marketplace update ray-framework</code>. The always-on cost is deliberately small — each skill's <code>SKILL.md</code> body is a lean workflow, and its detailed reference dockets load only when the skill is invoked.</p>
 
 <h3>Manual install (Gemini, Codex, Cursor, Antigravity, or Claude without the plugin)</h3>
 
@@ -389,12 +434,14 @@ graph LR
 <h2>Status</h2>
 
 <ul>
-  <li><strong>Packaging:</strong> Installs as a Claude Code plugin (<code>ray@ray-framework</code>) via the bundled <code>.claude-plugin/</code> marketplace; validated with <code>claude plugin validate --strict</code>, all 25 skills and 3 subagents load.</li>
+  <li><strong>Packaging:</strong> Installs as a Claude Code plugin (<code>ray@ray-framework</code>) via the bundled <code>.claude-plugin/</code> marketplace; validated with <code>claude plugin validate --strict</code>, all 27 skills and 4 subagents load.</li>
   <li><strong>Core Pipeline:</strong> 14 skills are fully implemented and internally consistent.</li>
   <li><strong>Domain Audit Suite:</strong> 9 skills — the web canon (<code>ray-custodian</code>, <code>ray-turnstile</code>, <code>ray-crucible</code>, <code>ray-seam</code>, <code>ray-sentry</code>, <code>ray-vault</code>, <code>ray-citadel</code>) plus native memory-safety (<code>ray-marrow</code>) and AI/LLM integration (<code>ray-oracle</code>) — each against the shared findings contract with its own <code>references/</code> dockets.</li>
   <li><strong>Live Adversary Loop:</strong> <code>ray-siege</code> plus the <code>ray-reaver</code> (red) and <code>ray-bulwark</code> (blue) subagents &mdash; a fail-closed, local-only red-team/blue-team loop that reuses <code>ray-detonator</code>'s sandbox and re-attack machinery.</li>
+  <li><strong>External Recon:</strong> <code>ray-quarry</code> &mdash; fail-closed, scope-attested attack-surface footprinting (passive-first, bounded active), with a dependency-free FOCA-style document-metadata extractor (<code>scripts/ray_metadata.py</code>).</li>
+  <li><strong>Detection &amp; Response:</strong> <code>ray-warden</code> plus the <code>ray-vigil</code> analyst subagent &mdash; a tiered-autonomy incident analyst (T1 autonomous / T2 allowlisted-reversible under a circuit breaker / T3 human-only) with an append-only audit trail.</li>
   <li><strong>Code Review:</strong> <code>ray-loupe</code> plus the <code>ray-scrivener</code> reviewer subagent &mdash; a high-precision general reviewer that delegates deep security to the suite and makes cross-file findings via the AST index.</li>
-  <li><strong>Agent Memory:</strong> curated, global, dependency-free Layer&nbsp;1 memory (<code>scripts/ray_memory.py</code>) so the red, blue, and review agents compound skill across runs.</li>
+  <li><strong>Agent Memory:</strong> curated, global, dependency-free Layer&nbsp;1 memory (<code>scripts/ray_memory.py</code>) so the red, blue, review, and analyst agents compound skill across runs.</li>
   <li><strong>Pending Components:</strong> Exploit chaining (<code>ray-cascade</code>), VCS history extraction (<code>ray-ledger</code>), and the reference orchestrator (<code>ray-conductor</code>). Standalone patch generation (<code>ray-anvil</code>) remains pending for the static pipeline, though <code>ray-siege</code> now performs live patching in its loop. Contributions welcome.</li>
 </ul>
 
