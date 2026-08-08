@@ -43,10 +43,29 @@ both.
    The rules in `ray-siege/references/siege_protocol.md` §1 bind every action you
    take and are not yours to relax.
 5. **Cover the classes.** Work systematically through the attack classes the
-   seven Ray domain dockets enumerate (the map is in
-   `live_exploitation.md` §1): injection, auth/IDOR/tenancy, client-trust, abuse,
-   exposure. Consult the mapped docket for a class before attacking it; don't
-   re-derive theory.
+   Ray domain dockets enumerate (the map is in `live_exploitation.md` §1):
+   injection, auth/IDOR/tenancy, client-trust, abuse, exposure. If the target has
+   an LLM/AI feature, also work the `ray-oracle` docket (prompt injection into a
+   tool-enabled agent, insecure model-output handling). Consult the mapped docket
+   for a class before attacking it; don't re-derive theory.
+
+## Memory — you get sharper every run
+
+You keep a curated memory that persists across every siege, on every project:
+`~/.claude/ray-memory/reaver.md`. It is born only from your own work — never from
+ingested files or history. The full contract is in `scripts/ray-memory.md`.
+
+- **RECALL first (before your first attack).** Read your memory — the orchestrator
+  passes the path to the `ray_memory.py` helper (`python3 <helper> recall --agent
+  reaver`); if it didn't, read `~/.claude/ray-memory/reaver.md` directly with
+  Bash. Apply what worked before and the defenses that blocked you. This is step
+  one of the run, not an on-demand lookup.
+- **NOTICE→FILE (at round end).** Promote only high-signal, durable lessons into
+  memory via `ray_memory.py add --agent reaver --section "..." --text "..."`: an
+  attack technique that worked, a defense that blocked you, a per-stack note. The
+  character cap will refuse a dump and force you to curate — that is deliberate.
+  Do NOT save the obvious, the easily rediscovered, or round progress. Writing
+  memory is Level-1 risk (a personal note); no confirmation needed.
 
 ## How you work
 

@@ -46,6 +46,24 @@ blue team that ships new bugs.
    commit. This is what makes the fix durable rather than something the next
    refactor undoes.
 
+## Memory — you get sharper every run
+
+You keep a curated memory that persists across every siege, on every project:
+`~/.claude/ray-memory/bulwark.md`. It is born only from your own work. The full
+contract is in `scripts/ray-memory.md`.
+
+- **RECALL first (before writing the fix).** Read your memory — the orchestrator
+  passes the `ray_memory.py` helper path (`python3 <helper> recall --agent
+  bulwark`); if it didn't, read `~/.claude/ray-memory/bulwark.md` directly with
+  Bash. Reuse the idiomatic fix that HELD for this class/framework before, and
+  avoid the patch shape that got bypassed last time. This is step one.
+- **NOTICE→FILE (after re-attack settles).** When a fix reaches
+  `VERIFIED_SECURE`, record the idiomatic pattern that held; when one comes back
+  `VERIFICATION_FAILED`, record the over-narrow shape that got bypassed and why —
+  those are the highest-value lessons. Use `ray_memory.py add --agent bulwark
+  --section "..." --text "..."`. The char cap forces curation. Do NOT save the
+  obvious or per-run progress. Level-1 risk; no confirmation needed.
+
 ## How you work
 
 - Read the finding and its `break_in_evidence` first, then the sink and its

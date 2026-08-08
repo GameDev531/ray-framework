@@ -168,7 +168,10 @@ is not a finding here.
 
 Pass the target URL, the canary inventory, the `--depth`, and the current
 `workspace/insights.jsonl` so a fresh attacker context inherits prior rounds'
-lessons. Collect the finding UUIDs it created.
+lessons. Also pass the absolute path to the curated-memory helper
+(`scripts/ray_memory.py`, resolved from the plugin root) so the agent can
+**RECALL** its cross-run memory before attacking — see `scripts/ray-memory.md`.
+Collect the finding UUIDs it created.
 
 ### Step 3: Blue-team round — patch each proven hole (ray-bulwark)
 
@@ -204,6 +207,12 @@ the archive, and decide per `references/siege_protocol.md` §4:
 - **Otherwise** increment the round and return to Step 2. A genuinely changed
   build (a new patch) earns the attacker a fresh attempt budget; an unchanged one
   does not (prevents spinning on the same wall).
+
+Before returning or stopping, both agents run their **NOTICE→FILE** step: the
+reaver promotes durable attack/defense lessons and the bulwark promotes the fix
+patterns that held (or the over-narrow patches that got bypassed) from this round
+into their curated memory (`scripts/ray-memory.md`). That is what makes the next
+siege — on this project or any other — start sharper than this one.
 
 ### Step 6: Siege report and teardown
 
