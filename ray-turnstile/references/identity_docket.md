@@ -116,6 +116,28 @@ problem.
 a token for logging or routing. The pre-parse is often where an unverified claim
 gets promoted into the request context.
 
+### Signing-crypto misuse behind the token
+
+The RFC 8725 checklist covers the token format; these cover the signature math,
+where identity is minted. Flag them when the app signs its own tokens/cookies
+rather than delegating to a vetted library's defaults:
+
+- **ECDSA/DSA `k` reuse or bias** — a per-signature nonce that is fixed, low
+  entropy, or reused across two signatures recovers the private key, and then
+  every token is forgeable. The safe pattern is deterministic `k` (RFC 6979) or a
+  CSPRNG the library manages. Home-rolled signing is the tell.
+- **HMAC key strength** — an HMAC secret shorter than 256 bits or a dictionary
+  word is offline-crackable from one captured token (also RFC 8725 #4).
+- **Non-constant-time signature/MAC comparison** — cross-reference `/ray-crucible`
+  `TIMING`.
+- **RSA signature with a weak key or `NoPadding`** — RSA < 2048, or verification
+  that does not check the padding structure.
+
+The fuller catalog of protocol-crypto misuse at rest and in transit (nonce/IV
+reuse in AEAD, padding oracles, MAC-then-encrypt, certificate-validation depth)
+lives in `/ray-vault`'s `datastore_hardening.md` §3 — report a signing defect here
+and an at-rest/in-transit defect there; `/ray-condenser` merges.
+
 ______________________________________________________________________
 
 ## 5. MFA and Anti-Automation

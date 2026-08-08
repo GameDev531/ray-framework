@@ -354,6 +354,30 @@ integrity you verify.
   safe as the signing key — a leaked or default key turns them into a
   deserialization sink; cross-reference `/ray-turnstile` `SEC-02`.
 
+### Gadget-chain catalog (to strengthen a finding, not required for the class)
+
+The class is HIGH on the sink alone, but naming a plausible **gadget chain** — the
+sequence of existing classes whose side effects, triggered during
+deserialization, reach code execution — turns a "this is dangerous" finding into
+a reproducible one for `/ray-detonator`. Note which chain the target's dependency
+set makes available; do not fabricate a chain you cannot ground in a present
+library.
+
+| Ecosystem | Sink | Common gadget sources (check the lockfile for presence/version) |
+|---|---|---|
+| Java | `ObjectInputStream.readObject` | `ysoserial` families: Commons-Collections (`InvokerTransformer`), Commons-Beanutils, Spring, Groovy, Rome, Hibernate; JNDI/RMI/LDAP `LDAPRefServer` for `log4shell`-style lookups |
+| Python | `pickle.loads`, `__reduce__` | `os.system`/`subprocess` via `__reduce__`; `pandas`/`numpy` `allow_pickle`; `PyYAML` `!!python/object/apply`; `jsonpickle` |
+| PHP | `unserialize` | POP chains via `__wakeup`/`__destruct`/`__toString`; framework chains (Laravel, Symfony, Monolog, Guzzle); `phpggc` catalogs them |
+| .NET | `BinaryFormatter`, `LosFormatter`, `Json.NET` `TypeNameHandling` | `TypeConfuseDelegate`, `ObjectDataProvider`, `WindowsIdentity`; `ysoserial.net` families |
+| Ruby | `Marshal.load`, `YAML.load` | Universal RCE gadget via `Gem::*`/`Psych`; Rails secret-key-based cookie chains |
+| Node | `node-serialize`, `funcster`, `serialize-javascript` misuse | IIFE `_$$ND_FUNC$$_` immediate-invoke; prototype-pollution → gadget (see `PROTO`) |
+
+**How to demonstrate for `/ray-detonator`:** name the sink, confirm a gadget
+source is in the resolved dependency tree (grep the lockfile), and describe the
+serialized payload shape — the reproduction builds the gadget with the matching
+tool (`ysoserial`/`phpggc`/`ysoserial.net`) in the sandbox and observes the benign
+marker command. Never build or run a weaponized gadget outside the sandbox.
+
 ______________________________________________________________________
 
 ## XXE — XML External Entities

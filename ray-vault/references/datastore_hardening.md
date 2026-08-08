@@ -124,6 +124,40 @@ in a KMS means a database dump alone discloses nothing.
 | Searchability | Blind index or deterministic encryption where equality search is required, with the leakage acknowledged | Storing a plaintext "search copy" beside the ciphertext, which voids the control |
 | Passwords | Hashed with a password KDF, never encrypted | Reversible encryption (see `/ray-turnstile` `CRED-01`) |
 
+### Protocol-level crypto misuse (beyond mode selection)
+
+Choosing AES-GCM is necessary, not sufficient. The failures that survive a
+"we use AEAD" claim are in how the primitive is *used*. Audit each where the
+application does its own cryptography rather than delegating to TLS/KMS:
+
+| Misuse | Why it breaks | What to grep / check |
+|---|---|---|
+| **Nonce/IV reuse with GCM/CTR/ChaCha** | Reusing a nonce under the same key is catastrophic for GCM — it leaks the authentication key and XORs plaintexts. A counter that resets, a random 96-bit nonce generated at high volume (birthday bound), or a hard-coded IV | `iv =`/`nonce =` constants; a nonce derived from a low-entropy counter; random nonce without a usage cap |
+| **Static/predictable IV with CBC** | Enables chosen-plaintext distinguishers and BEAST-style attacks | A fixed IV, or IV = key, or IV = zero |
+| **MAC-then-encrypt / no MAC** | Unauthenticated encryption (CBC/CTR without a separate MAC) enables padding-oracle and bit-flipping attacks | CBC/CTR with no HMAC; encrypt-then-MAC is the safe order — flag MAC-then-encrypt and encrypt-and-MAC |
+| **Padding oracle** | A distinguishable error/timing between "bad padding" and "bad MAC" on CBC decryption recovers plaintext | Decryption paths that return different errors/timing for padding vs. integrity failure |
+| **ECDSA/DSA nonce (`k`) reuse or bias** | Reusing or biasing the per-signature `k` recovers the private key from two signatures | Home-rolled signing; a fixed or low-entropy `k`; not using RFC 6979 deterministic `k` |
+| **RSA without OAEP / textbook RSA** | PKCS#1 v1.5 encryption padding oracles (Bleichenbacher); no padding at all is malleable | `RSA/ECB/NoPadding`, `PKCS1Padding` for encryption (vs OAEP) |
+| **Weak/insufficient key or curve** | RSA < 2048, non-standard curves, DES/3DES/RC4/MD5/SHA-1 in a security role | Algorithm/keysize constants |
+| **Non-constant-time comparison of MACs/tags** | Timing leak on tag/HMAC compare | `==`/`!=` on a MAC — see `/ray-crucible` `TIMING` |
+
+### TLS/certificate validation depth (in transit)
+
+`sslmode=require` and its equivalents encrypt but do **not** authenticate the
+peer — an active MITM succeeds. Beyond the datastore transport rows in §3, check
+any application-level TLS client (webhooks, service-to-service, outbound API
+calls) for disabled or partial verification:
+
+| Failing shape | Where |
+|---|---|
+| `verify=False`, `rejectUnauthorized: false`, `InsecureSkipVerify: true`, `CURLOPT_SSL_VERIFYPEER=0`, a trust-all `X509TrustManager`/`HostnameVerifier` | HTTP/DB/gRPC client construction |
+| Hostname verification disabled while cert verification is on | Custom `HostnameVerifier` returning true |
+| Certificate pinning absent where the threat model needs it, or a pin that never rotates | Mobile/desktop clients, high-value service calls |
+
+These overlap `/ray-turnstile` (signing/JWT) and `/ray-custodian` (transport
+headers); report the crypto-usage defect where you found it and let
+`/ray-condenser` merge.
+
 ______________________________________________________________________
 
 ## 4. Credentials
