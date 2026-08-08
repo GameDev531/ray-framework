@@ -36,9 +36,10 @@ context; it keeps a run's reasoning stable.
 ## Where it lives
 
 Global: `~/.claude/ray-memory/<agent>.md`, one file per agent
-(`reaver.md`, `bulwark.md`, `scrivener.md`). Global (not per-project) is
-deliberate — the hacker, the fixer, and the reviewer should get better across
-**every** project over time, which is the whole point of "learn from each fix."
+(`reaver.md`, `bulwark.md`, `scrivener.md`, `vigil.md`). Global (not per-project)
+is deliberate — the hacker, the fixer, the reviewer, and the analyst should get
+better across **every** project and estate over time, which is the whole point of
+"learn from each fix."
 
 ## The character cap (not tokens)
 
@@ -97,6 +98,8 @@ agent, in its charter:
   and why*, *Idiomatic patterns per framework*.
 - `scrivener.md` — *Recurring defects*, *House style / project conventions*,
   *False-positive traps to avoid*.
+- `vigil.md` — *False-positive patterns (stop crying wolf)*, *True-positive tells
+  I under-weighted*, *Per-estate baselines and human overturns*.
 
 ## Extending to other agents
 

@@ -39,7 +39,7 @@ from datetime import datetime, timezone
 
 DEFAULT_DIR = os.path.expanduser(os.path.join("~", ".claude", "ray-memory"))
 DEFAULT_MAX_CHARS = 6000  # per-file hard cap; forces curation over dumping.
-KNOWN_AGENTS = ("reaver", "bulwark", "scrivener")
+KNOWN_AGENTS = ("reaver", "bulwark", "scrivener", "vigil")
 
 HEADER = (
     "<!-- Ray curated memory (Layer 1). Owned by the agent; born only from its own\n"
