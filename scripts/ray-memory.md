@@ -76,6 +76,12 @@ A non-unique snippet is refused (give a longer trecho); an over-cap write is
 refused (curate first). Writing memory is **Level-1 risk** — a personal note, not
 a system action — so it needs no confirmation each time.
 
+**Over MCP (`ray-tools`).** Where the Ray MCP server is running, the same actions
+are available as real tools an agent calls directly: `ray_memory_recall`
+(`{"agent": "..."}`), `ray_memory_add` (`{"agent", "section", "text"}`), and
+`ray_memory_list`. This is the un-fakeable path — the tool executes or returns an
+error. The Bash helper remains the fallback when the server is not available.
+
 ## How agents use it
 
 The orchestrator (`ray-siege`, `ray-loupe`) resolves the absolute path to

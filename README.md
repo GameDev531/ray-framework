@@ -36,6 +36,27 @@
 
 <hr />
 
+<h2>Execution Model &amp; Requirements</h2>
+
+<p>Be clear-eyed about what this plugin is, because it changes what you should expect from it. Ray is <strong>not</strong> a self-contained scanner that runs on its own. It is a body of <strong>skills (know-how), agent role definitions, and a few real bundled tools</strong> that a tool-capable host — Claude Code, Codex, Gemini CLI, or any Agent-Skills runtime — executes. It shines <em>because</em> of that host, not in spite of it: the host supplies the execution surface, and Ray supplies the discipline that drives it.</p>
+
+<p>Concretely, Ray is honest about what it <strong>ships</strong> versus what it <strong>drives</strong>:</p>
+
+<ul>
+  <li><strong>Ships (real, in this repo):</strong> the skill and agent definitions; the curated-memory helper (<code>scripts/ray_memory.py</code>); the dependency-free document-metadata extractor (<code>scripts/ray_metadata.py</code>); the SCA/SBOM and IaC helpers (<code>scripts/ray_sbom.py</code>, <code>scripts/ray_iac.py</code>); and an <strong>MCP server</strong> (<code>scripts/ray_mcp_server.py</code>) that exposes those helpers as first-class tools.</li>
+  <li><strong>Drives (borrowed from the host + environment):</strong> the host's built-in tools (<code>Bash</code>, <code>Read</code>, <code>Edit</code>, <code>WebFetch</code>, …) and whatever security binaries happen to be installed (<code>nmap</code>, <code>gitleaks</code>, <code>tfsec</code>, <code>osv-scanner</code>, …). When a driven binary is absent, the skill falls back to a bundled dependency-free path and says so — it never pretends a tool ran.</li>
+</ul>
+
+<p>The <code>tools:</code> field in each agent definition is an <strong>allowlist that selects</strong> from the host's built-in tools — it restricts an agent to what it needs; it does not invent new capability. New capability comes from the bundled scripts and the MCP tools.</p>
+
+<p><strong>Minimum requirement: a host with a real execution surface — at least <code>Bash</code> and <code>python3</code>.</strong> Given only skills and no way to execute, a weaker model could <em>narrate</em> tool use it never performed. Ray is built to resist exactly that: findings are <strong>evidence-first</strong> (a siege break-in demands a live canary; recon demands a metadata field actually extracted), the bundled helpers are <strong>dependency-free</strong> so they work in a bare environment, and the <strong>MCP tools cannot be faked</strong> — a tool call either executes and returns a result or returns an error. Install Ray somewhere it can actually run; without an execution surface, skills degrade to roleplay.</p>
+
+<h3>Real tools over MCP (<code>ray-tools</code>)</h3>
+
+<p>The bundled <code>.claude-plugin</code> declares an <code>mcpServers</code> entry that starts <code>scripts/ray_mcp_server.py</code> — a stdlib-only MCP server (no pip install, no external dependency) exposing Ray's helpers as callable tools: <code>ray_metadata_extract</code>, <code>ray_memory_recall</code>/<code>_add</code>/<code>_list</code>, and (with the matching skills) <code>ray_sbom_generate</code> and <code>ray_iac_scan</code>. On Claude Code they register automatically with the plugin; any MCP-capable client can launch the same server. This is the difference between "the skill tells the model to run a script" and "the model calls a tool that provably ran."</p>
+
+<hr />
+
 <h2>Pipeline Architecture</h2>
 
 <p>Each stage degrades gracefully if surrounding modules are unavailable, ensuring no single point of failure disrupts the campaign.</p>

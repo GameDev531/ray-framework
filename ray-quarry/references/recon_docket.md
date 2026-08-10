@@ -91,6 +91,10 @@ them. This is the classic FOCA technique, done passively and dependency-free.
 python3 <plugin>/scripts/ray_metadata.py <file-or-dir> [--json]
 ```
 
+Or, where the Ray MCP server (`ray-tools`) is available, call the
+`ray_metadata_extract` tool directly (`{"path": "...", "recurse": false}`) — same
+extractor, but a real tool call that provably ran rather than a narrated one.
+
 It handles:
 - **PDF** — the `/Info` dictionary (Author/Creator/Producer/CreationDate) and the
   XMP packet (`dc:creator`, `xmp:CreatorTool`, `pdf:Producer`).

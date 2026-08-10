@@ -61,5 +61,12 @@
     "./ray-loupe",
     "./ray-quarry",
     "./ray-warden"
-  ]
+  ],
+  "mcpServers": {
+    "ray-tools": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/ray_mcp_server.py"]
+    }
+  }
 }
