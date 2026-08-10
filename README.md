@@ -250,10 +250,28 @@ graph LR
       <td>The target app's own LLM surface (OWASP LLM Top 10): prompt injection (direct/indirect/RAG), insecure model-output handling, excessive agency &amp; tool abuse, system-prompt/data disclosure, unbounded consumption, and RAG/artifact poisoning.</td>
       <td><code>llm_security_docket.md</code><br/><code>findings_contract.md</code></td>
     </tr>
+    <tr>
+      <td><strong><code>ray-manifest</code></strong></td>
+      <td>Dependencies / SBOM</td>
+      <td>Software-composition analysis: parses lockfiles across ecosystems, emits a CycloneDX SBOM, and flags known-vulnerable versions (OSV.dev or an installed scanner), risky licenses, typosquats/dependency-confusion, and floating/unmaintained deps — the risk you inherit rather than write.</td>
+      <td><code>sca_docket.md</code><br/><code>findings_contract.md</code></td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-terrain</code></strong></td>
+      <td>Infrastructure-as-Code</td>
+      <td>IaC &amp; cloud-posture misconfig (Terraform/CFN/K8s/Docker/compose): open-to-the-world ingress, wildcard IAM, public storage, unencrypted resources, privileged containers, secrets in IaC — with a <code>file:line</code> anchor and, behind a read-only gate, live-posture corroboration.</td>
+      <td><code>iac_docket.md</code><br/><code>findings_contract.md</code></td>
+    </tr>
+    <tr>
+      <td><strong><code>ray-steward</code></strong></td>
+      <td>Maintenance / resilience</td>
+      <td>Forward-looking upkeep: dependency freshness &amp; EOL, patch cadence, backup <em>and verified restore</em>, migration safety, DR/runbook readiness, secret rotation, and observability/alert coverage — the slow-decay risks a point-in-time audit misses.</td>
+      <td><code>maintenance_docket.md</code><br/><code>findings_contract.md</code></td>
+    </tr>
   </tbody>
 </table>
 
-<p>The suite began web-centric; <code>ray-marrow</code> and <code>ray-oracle</code> extend it to the classes an advanced bug-finder reaches beyond the OWASP web canon — native memory-safety and the application's AI integration. They are the same drop-in siblings of <code>ray-prospector</code>, writing the same finding JSON.</p>
+<p>The suite began web-centric; the later siblings extend it to the classes an advanced reviewer reaches beyond the OWASP web canon — native memory-safety (<code>ray-marrow</code>), the application's AI integration (<code>ray-oracle</code>), inherited dependency risk (<code>ray-manifest</code>), infrastructure-as-code misconfiguration (<code>ray-terrain</code>), and over-time maintenance/resilience (<code>ray-steward</code>). All are the same drop-in siblings of <code>ray-prospector</code>, writing the same finding JSON.</p>
 
 <h3>Running a Domain Sweep</h3>
 
@@ -265,7 +283,10 @@ graph LR
 /ray-vault        # datastore exfiltration barriers
 /ray-citadel      # deployed architecture
 /ray-marrow       # native memory-safety (C/C++/Rust-unsafe/FFI)
-/ray-oracle       # the app's LLM/AI integration</code></pre>
+/ray-oracle       # the app's LLM/AI integration
+/ray-manifest     # dependencies: SBOM + known-vulnerable versions
+/ray-terrain      # infrastructure-as-code & cloud misconfig
+/ray-steward      # maintenance & resilience over time</code></pre>
 
 <p>Run whichever domains the target actually has, then continue into <code>/ray-condenser</code> and the rest of the validation chain exactly as with a generic pass. Domains overlap deliberately at their edges (each <code>SKILL.md</code> ends with a <em>Boundary With Adjacent Skills</em> section); overlapping findings are merged by <code>ray-condenser</code>, never lost.</p>
 
@@ -409,7 +430,7 @@ graph LR
 <pre><code>/plugin marketplace add GameDev531/ray-framework
 /plugin install ray@ray-framework</code></pre>
 
-<p>All 27 skills register at once (plus the <code>ray-reaver</code>, <code>ray-bulwark</code>, <code>ray-scrivener</code>, and <code>ray-vigil</code> subagents) and become available as <code>/ray-*</code> commands, triggering automatically by description. Update later with <code>/plugin marketplace update ray-framework</code>. The always-on cost is deliberately small — each skill's <code>SKILL.md</code> body is a lean workflow, and its detailed reference dockets load only when the skill is invoked.</p>
+<p>All 30 skills register at once (plus the <code>ray-reaver</code>, <code>ray-bulwark</code>, <code>ray-scrivener</code>, and <code>ray-vigil</code> subagents, and the <code>ray-tools</code> MCP server) and become available as <code>/ray-*</code> commands, triggering automatically by description. Update later with <code>/plugin marketplace update ray-framework</code>. The always-on cost is deliberately small — each skill's <code>SKILL.md</code> body is a lean workflow, and its detailed reference dockets load only when the skill is invoked.</p>
 
 <h3>Manual install (Gemini, Codex, Cursor, Antigravity, or Claude without the plugin)</h3>
 
@@ -438,7 +459,7 @@ graph LR
 /ray-prospector   # Execute audit and populate workspace/findings/*.json
                   # (optionally add domain sweeps here: /ray-custodian, /ray-turnstile,
                   #  /ray-crucible, /ray-seam, /ray-sentry, /ray-vault, /ray-citadel,
-                  #  /ray-marrow, /ray-oracle)
+                  #  /ray-marrow, /ray-oracle, /ray-manifest, /ray-terrain, /ray-steward)
 /ray-condenser    # Deduplicate findings
 /ray-arbiter      # Validate findings
 /ray-magistrate   # Assess production viability
@@ -455,14 +476,15 @@ graph LR
 <h2>Status</h2>
 
 <ul>
-  <li><strong>Packaging:</strong> Installs as a Claude Code plugin (<code>ray@ray-framework</code>) via the bundled <code>.claude-plugin/</code> marketplace; validated with <code>claude plugin validate --strict</code>, all 27 skills and 4 subagents load.</li>
+  <li><strong>Packaging:</strong> Installs as a Claude Code plugin (<code>ray@ray-framework</code>) via the bundled <code>.claude-plugin/</code> marketplace; validated with <code>claude plugin validate --strict</code>, all 30 skills and 4 subagents load, plus the <code>ray-tools</code> MCP server.</li>
   <li><strong>Core Pipeline:</strong> 14 skills are fully implemented and internally consistent.</li>
-  <li><strong>Domain Audit Suite:</strong> 9 skills — the web canon (<code>ray-custodian</code>, <code>ray-turnstile</code>, <code>ray-crucible</code>, <code>ray-seam</code>, <code>ray-sentry</code>, <code>ray-vault</code>, <code>ray-citadel</code>) plus native memory-safety (<code>ray-marrow</code>) and AI/LLM integration (<code>ray-oracle</code>) — each against the shared findings contract with its own <code>references/</code> dockets.</li>
+  <li><strong>Domain Audit Suite:</strong> 12 skills — the web canon (<code>ray-custodian</code>, <code>ray-turnstile</code>, <code>ray-crucible</code>, <code>ray-seam</code>, <code>ray-sentry</code>, <code>ray-vault</code>, <code>ray-citadel</code>), native memory-safety (<code>ray-marrow</code>), AI/LLM integration (<code>ray-oracle</code>), dependencies/SBOM (<code>ray-manifest</code>), infrastructure-as-code (<code>ray-terrain</code>), and maintenance/resilience (<code>ray-steward</code>) — each against the shared findings contract with its own <code>references/</code> dockets.</li>
   <li><strong>Live Adversary Loop:</strong> <code>ray-siege</code> plus the <code>ray-reaver</code> (red) and <code>ray-bulwark</code> (blue) subagents &mdash; a fail-closed, local-only red-team/blue-team loop that reuses <code>ray-detonator</code>'s sandbox and re-attack machinery.</li>
   <li><strong>External Recon:</strong> <code>ray-quarry</code> &mdash; fail-closed, scope-attested attack-surface footprinting (passive-first, bounded active), with a dependency-free FOCA-style document-metadata extractor (<code>scripts/ray_metadata.py</code>).</li>
   <li><strong>Detection &amp; Response:</strong> <code>ray-warden</code> plus the <code>ray-vigil</code> analyst subagent &mdash; a tiered-autonomy incident analyst (T1 autonomous / T2 allowlisted-reversible under a circuit breaker / T3 human-only) with an append-only audit trail.</li>
   <li><strong>Code Review:</strong> <code>ray-loupe</code> plus the <code>ray-scrivener</code> reviewer subagent &mdash; a high-precision general reviewer that delegates deep security to the suite and makes cross-file findings via the AST index.</li>
   <li><strong>Agent Memory:</strong> curated, global, dependency-free Layer&nbsp;1 memory (<code>scripts/ray_memory.py</code>) so the red, blue, review, and analyst agents compound skill across runs.</li>
+  <li><strong>Real Tools over MCP:</strong> a stdlib-only MCP server (<code>scripts/ray_mcp_server.py</code>, registered as <code>ray-tools</code>) exposes the bundled helpers — document-metadata extraction, curated memory, SBOM/SCA (<code>scripts/ray_sbom.py</code>), and IaC scanning (<code>scripts/ray_iac.py</code>) — as first-class tools that provably run rather than narrated Bash. See <em>Execution Model &amp; Requirements</em>.</li>
   <li><strong>Pending Components:</strong> Exploit chaining (<code>ray-cascade</code>), VCS history extraction (<code>ray-ledger</code>), and the reference orchestrator (<code>ray-conductor</code>). Standalone patch generation (<code>ray-anvil</code>) remains pending for the static pipeline, though <code>ray-siege</code> now performs live patching in its loop. Contributions welcome.</li>
 </ul>
 
