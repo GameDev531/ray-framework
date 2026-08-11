@@ -23,6 +23,7 @@ Tools:
   - ray_iac_scan(path)                        -> ray_iac.py         (if bundled)
   - ray_arsenal_list(side?)                   -> ray_arsenal.py list (if bundled)
   - ray_arsenal_run(tool, target?, args?)     -> ray_arsenal.py run  (if bundled)
+  - ray_secret_scan(path, strict?)            -> ray_secrets.py      (if bundled)
 
 Run standalone for a smoke test:
   printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
@@ -35,7 +36,7 @@ import subprocess
 import sys
 
 SERVER_NAME = "ray-tools"
-SERVER_VERSION = "0.6.0"
+SERVER_VERSION = "0.7.0"
 # Echo the client's protocol version when given; otherwise advertise this one.
 DEFAULT_PROTOCOL = "2025-06-18"
 SUBPROCESS_TIMEOUT = 120
@@ -149,6 +150,16 @@ def tool_arsenal_run(args):
         # `--` ends option parsing so extra flags land in the `extra` positional.
         argv.append("--")
         argv += [str(a) for a in extra]
+    return _run(argv)
+
+
+def tool_secret_scan(args):
+    path = args.get("path")
+    if not path:
+        return ("missing required argument: path", True)
+    argv = [_script("ray_secrets.py"), str(path), "--json"]
+    if args.get("strict"):
+        argv.append("--strict")
     return _run(argv)
 
 
@@ -272,6 +283,27 @@ TOOLS = {
             },
         },
         tool_arsenal_run,
+    ),
+    "ray_secret_scan": (
+        {
+            "description": "Scan a file or directory for leaked secrets — DB connection "
+                           "strings, API keys, tokens, private keys — in source, tests, "
+                           "JSON/YAML, Markdown, notebooks, SQL and CI files. Redacts every "
+                           "matched value (never echoes a secret), raises severity for the "
+                           "creds+URL-in-a-doc breach pattern and secrets in test files, "
+                           "checks .gitignore coverage, and flags throwaway scratch files. "
+                           "Dependency-free (the ray-cloak guard).",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "File or directory to scan."},
+                    "strict": {"type": "boolean", "description": "Fail (isError) if any "
+                                                               "CRITICAL/HIGH secret is found — a pre-commit gate."},
+                },
+                "required": ["path"],
+            },
+        },
+        tool_secret_scan,
     ),
 }
 

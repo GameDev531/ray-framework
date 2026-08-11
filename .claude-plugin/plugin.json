@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "ray",
   "displayName": "Ray Framework",
-  "version": "0.6.0",
-  "description": "An agentic, evidence-first security review pipeline: 30 composable skills that map a codebase, build a threat model, audit it across security domains (web, memory-safety, AI/LLM, dependencies/SBOM, and infrastructure-as-code), validate, reproduce, and score every finding — plus a live red-team/blue-team loop (ray-siege), external attack-surface recon (ray-quarry), a tiered-autonomy detection-and-response analyst (ray-warden), operational maintenance auditing (ray-steward), and a high-precision general code-review skill (ray-loupe) — with agents that keep curated cross-run memory and real bundled tools exposed over MCP.",
+  "version": "0.7.0",
+  "description": "An agentic, evidence-first security review pipeline: 31 composable skills that map a codebase, build a threat model, audit it across security domains (web, memory-safety, AI/LLM, dependencies/SBOM, and infrastructure-as-code), validate, reproduce, and score every finding — plus a live red-team/blue-team loop (ray-siege), external attack-surface recon (ray-quarry), a tiered-autonomy detection-and-response analyst (ray-warden), operational maintenance auditing (ray-steward), a write-time secret-leak guard (ray-cloak), and a high-precision general code-review skill (ray-loupe) — with agents that keep curated cross-run memory and real bundled tools exposed over MCP.",
   "author": {
     "name": "GameDev531",
     "url": "https://github.com/GameDev531"
@@ -25,6 +25,9 @@
     "blue-team",
     "dast",
     "pentest-tools",
+    "secrets",
+    "secret-scanning",
+    "credential-leak",
     "code-review",
     "memory-safety",
     "llm-security",
@@ -71,7 +74,8 @@
     "./ray-warden",
     "./ray-manifest",
     "./ray-terrain",
-    "./ray-steward"
+    "./ray-steward",
+    "./ray-cloak"
   ],
   "mcpServers": {
     "ray-tools": {
