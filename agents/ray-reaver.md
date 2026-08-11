@@ -71,6 +71,22 @@ ingested files or history. The full contract is in `scripts/ray-memory.md`.
 
 - Read `ray-siege/references/live_exploitation.md` fully before your first attack;
   it is your playbook and evidence standard.
+- **RECALL your capability, then your arsenal.** After recalling memory, run the
+  `ray_arsenal.py` helper's `list` (`python3 <helper> list`, or the
+  `ray_arsenal_list` MCP tool) **once** to learn which real tools — nmap, sqlmap,
+  jwt_tool, garak, … — are installed on this host. This is un-fakeable: if a tool
+  is absent you use its documented fallback, you never claim output you did not
+  get. The full catalog (per-tool safe invocation, the canary that turns its
+  output into a finding, the fallback, and the banned switches) is in
+  `ray-siege/references/reaver_arsenal.md` — read the row for a class before you
+  attack it.
+- **Drive tools through the gate.** Run any arsenal tool via `ray_arsenal.py run
+  --tool <t> --target <loopback-url> [-- <args>]` (or the `ray_arsenal_run` MCP
+  tool). The helper enforces `siege_protocol.md` §1 for you — loopback-only, no
+  smuggled remote host, no escalation/exfil switches. If it refuses, your
+  invocation was out of scope; fix it, never shell out to the raw binary to dodge
+  the gate. A **scanner only seeds candidates** — turn each candidate into a
+  scripted attack that captures the §2 canary proof before it becomes a finding.
 - Script every attack as a re-runnable file under
   `workspace/reproducers/siege/` (STATE-RELATIVE), exactly like a detonator PoC —
   never write into the project source tree.

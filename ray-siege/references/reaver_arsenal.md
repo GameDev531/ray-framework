@@ -1,0 +1,150 @@
+# Reaver Arsenal — the offensive tools, driven honestly
+
+The tools `ray-reaver` reaches for, per class, and how to drive each **through the
+gate**. Ray does not embed nmap, sqlmap, or garak — it *drives* the real binary
+when present and falls back to a manual technique when absent. The
+`ray_arsenal.py` helper (MCP tools `ray_arsenal_list` / `ray_arsenal_run`) is the
+one gated path that runs any of them.
+
+This file is the *catalog*. The attack theory per class lives in the mapped
+domain docket; the live evidence standard lives in `live_exploitation.md` §2.
+Everything here operates under `siege_protocol.md` §1 — nothing below overrides it.
+
+## Table of Contents
+
+- [0. Two rules that bind the whole arsenal](#0-two-rules-that-bind-the-whole-arsenal)
+- [1. How to drive a tool](#1-how-to-drive-a-tool)
+- [2. The tools, by class](#2-the-tools-by-class)
+- [3. Deliberately excluded — and what to do instead](#3-deliberately-excluded--and-what-to-do-instead)
+
+______________________________________________________________________
+
+## 0. Two rules that bind the whole arsenal
+
+**A scanner seeds; a canary proves.** nmap, nuclei, nikto, sqlmap, arjun — every
+tool here produces *candidates*, not findings. A finding for `ray-siege` exists
+only when you have a **live canary proof** per `live_exploitation.md` §2. A
+scanner's "VULNERABLE" line is a lead to verify by hand, never a break-in on its
+own. `ray_arsenal_run` restates this in every result's `note` field; honor it.
+This is the same "manual over scanners" line already in `live_exploitation.md` §0.
+
+**The gate is not yours to relax.** `ray_arsenal_run` enforces
+`siege_protocol.md` §1 before it runs anything: the target must be loopback, no
+argument may carry a non-loopback host, and escalation/exfil/destructive switches
+are refused. If it refuses, the invocation was out of scope — fix the invocation,
+never route around the helper by shelling out to the raw binary to dodge the gate.
+Driving the raw binary directly is allowed only for a tool the helper does not
+carry, and the same §1 rules still bind you by hand.
+
+______________________________________________________________________
+
+## 1. How to drive a tool
+
+1. **RECALL capability first.** Before the first attack, call `ray_arsenal_list`
+   (once). It tells you which tools are actually installed on this host. If a tool
+   is absent, you use its fallback — you do **not** claim output you never got.
+   This is the anti-hallucination step: no `list` entry, no tool run.
+2. **Drive it through the gate.** `ray_arsenal_run(tool=…, target=<loopback URL>,
+   args=[…])`. Read the returned `stdout` as candidate signal.
+3. **Verify to a canary.** Turn any candidate into a scripted, re-runnable attack
+   under `workspace/reproducers/siege/` that captures the §2 canary evidence.
+   Only then write the finding (`findings_contract.md`).
+4. **On absence, fall back.** If `status: not_installed`, run the manual technique
+   in the tool's `fallback` (also shown by `ray_arsenal_list`). The fallbacks are
+   dependency-free (curl / a small Python socket sweep / base64url by hand), so a
+   bare host never blocks the siege.
+
+______________________________________________________________________
+
+## 2. The tools, by class
+
+Each row: what it is for, the safe invocation the helper builds, the canary that
+turns its output into a finding, and the domain docket with the full theory. The
+banned-switch column is what the gate refuses (and what you must never add by hand).
+
+### Recon / fingerprint
+
+| Tool | Drives | Canary that makes it a finding | Docket |
+|---|---|---|---|
+| `nmap` | `-sV -Pn -T3 --top-ports 1000` against the loopback host | none by itself — feeds every other class; open port + service is a lead | `ray-citadel` architecture_baseline |
+| `httpx` | title + tech-detect + status against the loopback URL | none by itself — the stack it reveals selects the next attack | `ray-custodian` web_surface_baseline |
+
+Banned here: mass timing floods (`-T5`, `--max-rate`) — bounded scans only.
+
+### Web discovery (seed only)
+
+| Tool | Drives | Canary | Docket |
+|---|---|---|---|
+| `ffuf` | fuzz a wordlist into the URL (`FUZZ` marker; pass `-w` in `args`) | a discovered endpoint is a lead; the break-in on it needs its own §2 proof | `ray-seam` seam_docket |
+| `nuclei` | bounded template scan (`-rl 50 -c 10`) | **never proof on its own** — hand-verify every hit to a canary | `ray-custodian` web_surface_baseline |
+| `nikto` | server-misconfig sweep (`-maxtime 120s`) | the sensitive artifact actually served to an unauthorized caller | `ray-citadel` architecture_baseline |
+
+### Injection
+
+| Tool | Drives | Canary | Docket |
+|---|---|---|---|
+| `sqlmap` | `--batch --level 2 --risk 1 --technique BEUST` on the URL | the **seeded canary row** surfaces, or a stable boolean/time differential | `ray-crucible` injection_docket |
+
+Banned here (hard): `--os-shell`, `--os-cmd`, `--os-pwn`, `--sql-shell`,
+`--file-write`, `--file-dest`, `--dump-all`, `--all`. Prove a write with **one**
+canary insert by hand — never sqlmap's write/exec primitives.
+
+### API / identity
+
+| Tool | Drives | Canary | Docket |
+|---|---|---|---|
+| `arjun` | hidden-parameter discovery on the URL | a hidden param that unlocks a break-in (mass-assignment, IDOR) — proven on that param | `ray-seam` seam_docket |
+| `jwt_tool` | offline token surgery: alg:none, HS/RS key-confusion, claim tamper (pass the captured token + flags in `args`) | a protected `200` for an identity the forged token should not have | `ray-turnstile` identity_docket |
+
+`jwt_tool` operates on a token you already captured — no network target. If you
+use its request mode (`-t`), the gate forces that URL to be loopback too.
+
+### Transport
+
+| Tool | Drives | Canary | Docket |
+|---|---|---|---|
+| `testssl.sh` | TLS posture of the loopback endpoint | a weak protocol/cipher/cert the local app actually negotiates (only if it serves TLS) | `ray-custodian` privacy_docket |
+
+### Intel (offline)
+
+| Tool | Drives | Canary | Docket |
+|---|---|---|---|
+| `searchsploit` | offline exploit-DB lookup by product+version (terms in `args`) | none — it maps a fingerprint to known exploits to try; the exploit needs its own §2 proof | `ray-citadel` architecture_baseline |
+
+### LLM red-team (the differentiator — casa com `ray-oracle`)
+
+| Tool | Drives | Canary | Docket |
+|---|---|---|---|
+| `garak` | LLM vulnerability probes; point its REST generator's **config** at the loopback LLM route | the inert marker appears in the model output, or the model calls a tool it must not | `ray-oracle` llm_security_docket |
+| `promptfoo` | red-team eval; its provider config points at the loopback endpoint | same — a jailbreak/injection that lands the canary marker | `ray-oracle` llm_security_docket |
+
+These two take a config file, so the gate cannot read the endpoint from argv —
+pointing the generator at the **loopback** LLM route is charter you uphold, exactly
+as with every other tool. Never aim them at a hosted model API.
+
+______________________________________________________________________
+
+## 3. Deliberately excluded — and what to do instead
+
+The arsenal is curated to the reaver's real target (a local web/API/LLM app under
+the non-destructive gate). These are left out on purpose:
+
+- **`hydra` / high-rate brute-forcers.** They invite flooding, which the charter
+  forbids. Prove a *missing* rate limit with a small bounded burst (≈20 requests
+  in a curl loop) per `live_exploitation.md` §3 — enough to show no throttle, never
+  enough to degrade the service.
+- **`interactsh` / Burp Collaborator / public OOB.** They exfil the callback to a
+  third-party server on the internet — a direct violation of §1.2. Prove SSRF
+  against the **siege's own local listener** (seeded in Setup Step 4), never a
+  public collaborator.
+- **`hashcat` / `john` offline crackers.** Rarely the siege's path (they need a
+  captured hash + a wordlist and prove little about the running app). If a weak
+  hashing scheme matters, report it from the code (`ray-turnstile`/`ray-vault`),
+  don't grind hashes.
+- **AD / wireless / C2 / RE frameworks** (CrackMapExec, aircrack, Sliver, Ghidra).
+  Out of the local-only, single-app charter by construction — a different kind of
+  engagement with a human-in-the-loop gate, which `ray-siege` is not.
+
+Reporting tools are excluded too, but for the opposite reason: `ray-gauge` and
+`ray-chronicle` already own findings output — the arsenal feeds them, it does not
+duplicate them.
