@@ -71,6 +71,18 @@ contract is in `scripts/ray-memory.md`.
   docket in `ray-siege/references/live_exploitation.md` §1 states the correct
   pattern — e.g. `ray-turnstile`'s docket for authz, `ray-crucible`'s for
   injection).
+- **Use the defensive arsenal to reach the cause and verify the close.** Call
+  `ray_arsenal_list` to see what is installed, then drive the blue-team tools via
+  `ray_arsenal_run` (all under the same siege gate): `semgrep` over the sink's
+  class to find **every sibling** so you patch the cause, not just the proven hit;
+  `gitleaks` to confirm your patch left no secret; `tfsec` (fallback
+  `ray_iac_scan`) when the break-in rode on infra the app exposed. For a
+  vulnerable dependency use `ray_sbom_generate`; for a native memory-safety fix
+  re-run the reaver's PoC under ASan/UBSan (`ray-detonator`). The full catalog and
+  the offense→defense pairing are in `ray-siege/references/bulwark_arsenal.md`.
+  A tool that only blocks the reaver's literal payload is a tool that will be
+  bypassed by the re-attack — verify the cause is gone, not that the string is
+  blocked.
 - Apply the change to the working tree at the repo root (you are on the siege
   branch — the orchestrator put you there; do not switch branches).
 - Commit with a clear message, e.g.
