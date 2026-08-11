@@ -21,6 +21,8 @@ Tools:
   - ray_memory_list()                         -> ray_memory.py list
   - ray_sbom_generate(path, offline?)         -> ray_sbom.py        (if bundled)
   - ray_iac_scan(path)                        -> ray_iac.py         (if bundled)
+  - ray_arsenal_list(side?)                   -> ray_arsenal.py list (if bundled)
+  - ray_arsenal_run(tool, target?, args?)     -> ray_arsenal.py run  (if bundled)
 
 Run standalone for a smoke test:
   printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
@@ -33,7 +35,7 @@ import subprocess
 import sys
 
 SERVER_NAME = "ray-tools"
-SERVER_VERSION = "0.5.0"
+SERVER_VERSION = "0.6.0"
 # Echo the client's protocol version when given; otherwise advertise this one.
 DEFAULT_PROTOCOL = "2025-06-18"
 SUBPROCESS_TIMEOUT = 120
@@ -124,6 +126,32 @@ def tool_iac_scan(args):
     return _run([_script("ray_iac.py"), str(path), "--json"])
 
 
+def tool_arsenal_list(args):
+    argv = [_script("ray_arsenal.py"), "list", "--json"]
+    side = args.get("side")
+    if side:
+        argv += ["--side", str(side)]
+    return _run(argv)
+
+
+def tool_arsenal_run(args):
+    tool = args.get("tool")
+    if not tool:
+        return ("missing required argument: tool", True)
+    argv = [_script("ray_arsenal.py"), "run", "--tool", str(tool), "--json"]
+    target = args.get("target")
+    if target:
+        argv += ["--target", str(target)]
+    extra = args.get("args") or []
+    if not isinstance(extra, list):
+        return ("argument 'args' must be an array of strings", True)
+    if extra:
+        # `--` ends option parsing so extra flags land in the `extra` positional.
+        argv.append("--")
+        argv += [str(a) for a in extra]
+    return _run(argv)
+
+
 # name -> (schema, handler). Tools whose helper is not bundled still list and
 # return a clean "tool unavailable" so discovery is stable across installs.
 TOOLS = {
@@ -207,6 +235,43 @@ TOOLS = {
             },
         },
         tool_iac_scan,
+    ),
+    "ray_arsenal_list": (
+        {
+            "description": "Probe which ray-siege arsenal tools (nmap, sqlmap, jwt_tool, "
+                           "garak, semgrep, gitleaks, …) are actually installed, with "
+                           "versions and a fallback for each absent one. Un-fakeable "
+                           "capability discovery for the reaver/bulwark. Requires the "
+                           "ray_arsenal helper (ray-siege).",
+            "inputSchema": {
+                "type": "object",
+                "properties": {"side": {"type": "string", "enum": ["offense", "defense"],
+                                        "description": "Filter to red-team or blue-team tools."}},
+            },
+        },
+        tool_arsenal_list,
+    ),
+    "ray_arsenal_run": (
+        {
+            "description": "Drive one arsenal tool through the ray-siege gate: the target "
+                           "must be loopback (127.0.0.0/8, ::1, localhost), no argument may "
+                           "smuggle a remote host, and escalation/exfil switches are refused. "
+                           "Returns the tool output, or 'not_installed' + fallback — never a "
+                           "fabricated result. Requires the ray_arsenal helper (ray-siege).",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "tool": {"type": "string", "description": "Arsenal tool name, e.g. nmap, "
+                                                              "sqlmap, jwt_tool, semgrep."},
+                    "target": {"type": "string", "description": "Loopback URL/host, or a "
+                                                               "filesystem path for SAST tools."},
+                    "args": {"type": "array", "items": {"type": "string"},
+                             "description": "Extra tool arguments (validated by the gate)."},
+                },
+                "required": ["tool"],
+            },
+        },
+        tool_arsenal_run,
     ),
 }
 
