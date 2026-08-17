@@ -222,6 +222,33 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
+## 7a. OWASP API Security Top 10 (2023) → owning docket
+
+An index for attacking or reviewing an **API** specifically. Each API risk is
+owned by the Ray docket that carries the full procedure — this table routes you
+there so nothing in the API canon is missed. (Mapping compiled with the Apache-2.0
+API-security corpus credited in `CREDITS.md`.)
+
+| # | API risk (2023) | Owning docket / procedure |
+|---|---|---|
+| API1 | Broken Object Level Authorization (BOLA/IDOR) | `ray-turnstile/tenancy_isolation.md` |
+| API2 | Broken Authentication (incl. JWT, OAuth) | **this docket** §3 (sessions), §4 (JWT), §6 (recovery), §7 (federated) |
+| API3 | Broken Object **Property** Level Auth (mass assignment + excessive data exposure) | `ray-seam/seam_docket.md` (mass assignment) + `ray-custodian/privacy_docket.md` (over-exposure) |
+| API4 | Unrestricted Resource Consumption | `ray-sentry/service_docket.md` (rate/quota) |
+| API5 | Broken Function Level Authorization (BFLA) | `ray-turnstile/tenancy_isolation.md` |
+| API6 | Unrestricted Access to Sensitive Business Flows | `ray-sentry/service_docket.md` (abuse resistance) |
+| API7 | Server-Side Request Forgery | `ray-crucible/injection_docket.md` §SSRF |
+| API8 | Security Misconfiguration | `ray-citadel/architecture_baseline.md` |
+| API9 | Improper Inventory Management (shadow/deprecated/undocumented endpoints, unpinned versions) | `ray-sentry/service_docket.md` + external discovery `ray-quarry` |
+| API10 | Unsafe Consumption of third-party APIs | `ray-seam/seam_docket.md` (trust boundary) |
+
+**Excessive data exposure** (an endpoint returns more fields than the client needs
+and the UI just hides them) is the one API3 half with no other home — treat a
+response carrying fields an unauthorized caller should not see as a finding here,
+cross-referenced to `ray-custodian`.
+
+______________________________________________________________________
+
 ## 7b. Secrets And Critical-Operation Integrity
 
 ### Secrets

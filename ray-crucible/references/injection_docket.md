@@ -26,6 +26,9 @@ guessing.
 - [REDOS — Catastrophic Regular Expressions](#redos--catastrophic-regular-expressions)
 - [CSVI — Formula Injection In Exports](#csvi--formula-injection-in-exports)
 - [DEPS — Vulnerable And Malicious Dependencies](#deps--vulnerable-and-malicious-dependencies)
+- [SMUGGLE — HTTP Request Smuggling / Desync](#smuggle--http-request-smuggling--desync)
+- [TYPEJUGGLE — Loose-Comparison / Type-Juggling Auth Bypass](#typejuggle--loose-comparison--type-juggling-auth-bypass)
+- [HPP — HTTP Parameter Pollution](#hpp--http-parameter-pollution)
 
 ______________________________________________________________________
 
@@ -627,3 +630,98 @@ application never invokes is LOW by `ray-gauge`'s `third_party_reachability`
 rule. Trace the call path, or state plainly that you did not — never assert
 reachability you have not checked, and never invent CVE identifiers, CVSS
 scores, or advisory text.
+
+______________________________________________________________________
+
+## SMUGGLE — HTTP Request Smuggling / Desync
+
+**CWE-444** (inconsistent interpretation of HTTP requests). Applies only when the
+app sits behind a **second HTTP processor** — a reverse proxy, load balancer, or
+CDN (nginx→gunicorn, HAProxy→node, a CDN→origin). Two processors that disagree on
+where one request ends and the next begins let an attacker prepend a hidden
+request to the next connection's victim traffic. (Technique adapted from the
+Apache-2.0 corpus credited in `CREDITS.md`.)
+
+### Where it hides / grep
+
+```
+# not a source grep — an architecture check: is there >1 HTTP hop?
+proxy_pass|upstream|X-Forwarded|Transfer-Encoding|Content-Length
+gunicorn|uwsgi|haproxy|nginx|traefik|cloudfront|cloudflare|varnish
+```
+
+### Rule
+
+The classic desync is a **CL.TE / TE.CL** disagreement: front-end honors
+`Content-Length`, back-end honors `Transfer-Encoding: chunked` (or the reverse),
+plus TE-obfuscation variants (`Transfer-Encoding : chunked`, duplicated headers,
+smuggled `\r\n`). The fix is one processor of truth: reject requests carrying both
+`Content-Length` and `Transfer-Encoding`, normalize/strip hop-by-hop headers at
+the edge, and prefer HTTP/2 end-to-end (which frames explicitly).
+
+### Reproduction hint
+
+This is **high-risk** and can poison a real victim's request — for `ray-siege`,
+prove desync only against the disposable local stack, with a canary path, and
+never fire it where a real user's connection could be captured. Describe the
+CL/TE payload and the observed smuggled-response for `/ray-detonator`; do not run
+it at scale.
+
+______________________________________________________________________
+
+## TYPEJUGGLE — Loose-Comparison / Type-Juggling Auth Bypass
+
+**CWE-697** (incorrect comparison). Dynamically-typed languages that compare with
+a **loose operator** coerce types first, so values that are not equal compare as
+equal — most dangerously in password/hash/token checks.
+
+### Where it hides / grep
+
+```
+==(?!=)                      # PHP/JS loose equality (not === )
+strcmp\(|hash_equals\(|in_array\([^,]+,[^,]+\)(?!, *true)   # loose in_array
+```
+
+### Rule
+
+- **PHP magic hashes:** two hashes that both start `0e` followed by all digits
+  are read as `0 × 10^n = 0`, so `"0e123" == "0e456"` is true — a password whose
+  MD5/SHA1 is a magic hash bypasses a `==` check. Also `"abc" == 0` is true on old
+  PHP, and `strcmp(array, string)` returns null == 0.
+- **JS:** `==` coercion (`"" == 0`, `"0" == false`, `[] == ![]`), and JSON that
+  sends a type the check did not expect (a number/array/boolean where a string
+  was assumed).
+
+Safe pattern: **strict comparison** (`===`, `hash_equals()`, constant-time token
+compare — cross-reference `TIMING`), and validate the JSON value's *type* before
+comparing.
+
+### Reproduction hint
+
+Send the same endpoint a magic-hash password / a `{"x": true}` where a string was
+expected, and show the auth check passing. Describe it for `/ray-detonator`.
+
+______________________________________________________________________
+
+## HPP — HTTP Parameter Pollution
+
+**CWE-235** (improper handling of duplicate parameters). Sending a parameter
+**twice** (`?role=user&role=admin`) makes different layers pick different copies —
+the WAF/validator sees the first, the app sees the last (or vice versa), or the
+back-end concatenates them. Used to bypass input filters, smuggle an extra value
+past a validator, or override a server-set field.
+
+### Where it hides / grep
+
+```
+getlist|getAll|req\.query\[|params\.getAll|\$_GET\[|request\.args\.getlist
+# frameworks that silently take first vs last differ — check which
+```
+
+### Rule
+
+Decide one canonical parsing (reject duplicates, or explicitly take-first) and
+apply the **same** rule at the edge validator and the app. A finding exists when a
+duplicated parameter reaches a sink or an authz decision with a value the
+single-copy validator never saw. Often a stepping-stone into the authz classes
+(`/ray-turnstile`) — record it as the ingress.
