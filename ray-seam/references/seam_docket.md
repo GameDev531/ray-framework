@@ -16,6 +16,7 @@ decides this, and who is allowed to know it?*
 - [6. Logging Hygiene](#6-logging-hygiene)
 - [7. Resource Limits](#7-resource-limits)
 - [8. Caching and Response Correctness](#8-caching-and-response-correctness)
+- [8b. Browser-Trust Response Headers (framing, host, CSP)](#8b-browser-trust-response-headers-framing-host-csp)
 - [9. Client-Supplied Values In Server Decisions](#9-client-supplied-values-in-server-decisions)
 - [10. Control Ledger IDs](#10-control-ledger-ids)
 
@@ -199,6 +200,26 @@ ______________________________________________________________________
 | `CACHE-02` `Vary` | Declares every credential-bearing header the response varies by (`Authorization`, `Cookie`, a tenant header) | Absent, so a shared cache mixes users |
 | `CACHE-03` Cache keys | Complete: every parameter that changes the body is keyed, and no attacker-settable unkeyed header influences it | Cache poisoning (an unkeyed `X-Forwarded-Host` shaping a cached response) and cache deception (`/account.css` served as account data and cached as a static asset) |
 | `CACHE-04` Service workers | Do not cache authenticated responses | A cached personalized response outliving the session on a shared device |
+
+______________________________________________________________________
+
+## 8b. Browser-Trust Response Headers (framing, host, CSP)
+
+The response headers that decide what another origin — or the attacker's own page
+— may do with this app. Companion to §5 (CORS) and §8 (caching). (Technique detail
+compiled with the Apache-2.0 corpus in `CREDITS.md`.)
+
+| Control | Expected | Failing shape |
+|---|---|---|
+| `HDR-01` Host-header trust | Absolute URLs (password-reset links, callbacks, canonical redirects) built from a **configured** canonical host, never from the `Host` / `X-Forwarded-Host` request header | The app reflects `Host` into a reset-link email → an attacker sets `Host: evil.com`, the victim clicks, and the token posts to the attacker (**password-reset poisoning → account takeover**). Also feeds cache poisoning (§8 `CACHE-03`) and routing |
+| `HDR-02` Framing / clickjacking | `X-Frame-Options: DENY` (or `SAMEORIGIN`) **and/or** CSP `frame-ancestors 'self'` on every state-changing or sensitive page | Neither set, so the page is framable — an attacker overlays it under a decoy UI and harvests clicks against the victim's live session |
+| `HDR-03` Content-Security-Policy | A real policy (no `unsafe-inline`/`unsafe-eval` for scripts; nonce/hash-based; a tight `default-src`/`script-src`) as **defense-in-depth** behind output encoding | Absent, or a policy defeated by `unsafe-inline`, a wildcard/over-broad allowlist, a hosted JSONP/AngularJS gadget on an allowed origin, or a reused nonce. Treat CSP as mitigation, **not** an XSS neutralizer — a gap is not itself the bug, but its absence lifts the severity of any reflected/stored XSS (`/ray-crucible` `XSS`) |
+| `HDR-04` Other baseline headers | `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Strict-Transport-Security` present | Missing `nosniff` (MIME-sniffing → stored XSS from an uploaded file), missing HSTS (downgrade), leaking `Referer` cross-origin |
+
+Judge these the way §5 judges CORS: a missing framing/CSP header is rarely a
+finding **alone**, but it is the multiplier that turns another bug into an
+exploit, and host-header trust is a standalone HIGH when it reaches link
+generation. Record each in the ledger with the page/route it applies to.
 
 ______________________________________________________________________
 
