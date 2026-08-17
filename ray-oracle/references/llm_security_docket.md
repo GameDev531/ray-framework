@@ -205,6 +205,65 @@ the artifact side.
 
 ______________________________________________________________________
 
+## Standards Map & Advanced Vectors (OWASP LLM 2025 / MITRE ATLAS)
+
+The classes above predate the OWASP-LLM-2025 renumbering and the MITRE ATLAS
+technique ids. This section pins each to the current standard and adds the modern
+vectors worth attacking on an LLM-integrated app. (Technique material in this
+section is adapted from the Apache-2.0 `mukul975/anthropic-cybersecurity-skills`
+AI-security corpus — see `CREDITS.md`.)
+
+| This docket's class | OWASP LLM 2025 | MITRE ATLAS |
+|---|---|---|
+| INJECTION (direct) | LLM01:2025 Prompt Injection | AML.T0051 |
+| INJECTION (indirect / RAG) | LLM01:2025 | AML.T0051.001 |
+| OUTPUT | LLM05:2025 Improper Output Handling | — (classic sink; see ray-crucible) |
+| AGENCY | LLM06:2025 Excessive Agency | AML.T0053 LLM Plugin Compromise |
+| DISCLOSURE (system prompt) | LLM07:2025 System Prompt Leakage | AML.T0057 LLM Data Leakage |
+| CONSUMPTION | LLM10:2025 Unbounded Consumption | — |
+| SUPPLY (RAG/embedding) | LLM08:2025 Vector & Embedding Weaknesses | AML.T0024 |
+| SUPPLY (poisoning) | LLM04:2025 Data & Model Poisoning | — |
+| MCP tool poisoning | MCP03:2025 | AML.T0010 ML Supply-Chain Compromise |
+| Model extraction/inversion | — | AML.T0024(.000/.001/.002) |
+
+### Indirect-injection hiding channels (enrich INJECTION)
+
+Indirect injection rarely arrives as visible text — naive input filtering misses
+it because it hides in a *trusted-looking data channel*. When attacking or
+reviewing a browse/summarize/OCR agent, check every channel the model reads but a
+human skims past: HTML comments and `display:none`/zero-width/white-on-white text,
+tiny-font or off-canvas text in PDFs, image **alt-text and EXIF**, text rendered
+into pixels (invisible to OCR-light filters, read by multimodal models), Unicode
+tag/zero-width characters, and Base64/ROT13-obfuscated instructions. A
+content-sanitization gate that normalizes and scans these *before* the model reads
+them is the mitigation; its absence is the finding.
+
+### MCP tool poisoning (enrich AGENCY/SUPPLY)
+
+An MCP server advertises each tool with a natural-language **description** the
+agent's model reads *before* deciding to call it. A malicious or compromised
+server can embed hidden instructions in that description (a *tool poisoning
+attack*) — effectively indirect injection delivered through the tool supply chain.
+Check: are third-party MCP tool descriptions treated as untrusted, pinned, and
+diffed on change (rug-pull detection)? An agent that loads unpinned remote tool
+descriptions into a privileged context is exposed. Cross-reference the arsenal's
+own gate discipline — a tool description is data, not instructions.
+
+### Model extraction / inversion / membership (new under SUPPLY)
+
+An inference API is an exfiltration surface (AML.T0024). Three sub-classes:
+**model stealing** (many boundary-probing queries + full logits/confidence
+vectors → train a surrogate), **model inversion** (reconstruct representative
+training inputs from confidence scores), and **membership inference** (determine
+whether a record was in the training/RAG corpus). The shared signal is *many
+crafted queries requesting full confidence vectors*. Defenses: rate-limit per
+principal, return top-label not full logits, and add output perturbation. For a
+RAG vector store, add **embedding inversion** (vectors are not one-way — text is
+partially recoverable) and **cross-tenant leakage** (a shared namespace or missing
+filter isolation lets one tenant retrieve another's chunks) — both LLM08:2025.
+
+______________________________________________________________________
+
 ## The Probabilistic-Severity Rule
 
 Read before scoring anything in this docket. LLM attacks are **probabilistic** —
