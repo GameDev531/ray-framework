@@ -24,6 +24,15 @@ the underlying technique knowledge and its standards mappings deserve credit.
     deserialization, prototype pollution, HTTP request smuggling, type juggling.
   - `ray-seam/references/seam_docket.md` — web cache poisoning/deception, CORS,
     host-header injection, clickjacking, CSP bypass, WebSocket.
+  - `ray-warden/references/analyst_playbooks.md` — proactive hypothesis-driven
+    threat hunting; ATT&CK / Cyber Kill Chain / Diamond framing; DFIR evidence
+    discipline (order of volatility, chain of custody); Pyramid of Pain.
+  - `ray-cloak/references/secret_hygiene_docket.md` — CI / pre-commit secret-scan
+    gate (shift-left).
+  - `ray-terrain/references/iac_docket.md` — container-image hardening checklist
+    and image CVE scanning (trivy/grype/dockle).
+  - `ray-siege/references/bulwark_arsenal.md` — shift-left CI gates that keep a
+    fix closed (SAST/DAST/secret/SCA/IaC in the pipeline).
 
 Per the Apache-2.0 terms, the upstream copyright notices and license are
 preserved by this attribution; the upstream `LICENSE` (Apache-2.0) is compatible

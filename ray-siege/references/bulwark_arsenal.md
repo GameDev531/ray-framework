@@ -17,6 +17,7 @@ This is the blue-team counterpart to `reaver_arsenal.md`. It binds to the same
 - [1. Offense → defense pairing](#1-offense--defense-pairing)
 - [2. The tools](#2-the-tools)
 - [3. Already covered by a Ray tool](#3-already-covered-by-a-ray-tool)
+- [4. Making the fix stick — shift-left (CI gates)](#4-making-the-fix-stick--shift-left-ci-gates)
 
 ______________________________________________________________________
 
@@ -110,3 +111,29 @@ external duplicate:
 The result is a blue team that drives real SAST/secret/IaC scanners for the cause,
 leans on Ray's own tools for SCA and memory safety, and always leaves a test
 behind — inside the same minimal, one-finding-one-commit charter.
+
+______________________________________________________________________
+
+## 4. Making the fix stick — shift-left (CI gates)
+
+A fix the bulwark commits closes one hole today; a **gate** keeps it closed and
+catches the next one. When the finding warrants it (a class the project keeps
+re-introducing), the durable remediation is a pipeline gate, not just the patch.
+Same tools, moved to CI. (Compiled with the Apache-2.0 DevSecOps corpus in
+`CREDITS.md`.)
+
+| Class of finding | The gate that keeps it fixed |
+|---|---|
+| Injection / the sink's class | `semgrep --config <ruleset> --error` in CI (SAST) — fail the build on the pattern; a custom rule for the exact sink shape the reaver hit |
+| Running-app regressions | `zap-baseline` / the arsenal's own DAST re-run against the ephemeral app in CI |
+| Leaked secret | `ray_secrets.py --strict` + `gitleaks` as a pre-commit hook **and** a required CI check (see `ray-cloak` docket §7) |
+| Vulnerable dependency | `ray_sbom_generate` / `osv-scanner` / `trivy` as a CI step that fails on a known-vulnerable version (`ray-manifest`) |
+| IaC / image misconfig | `trivy config` + `trivy image` in the pipeline (`ray-terrain` §5) |
+
+Two rules keep the gate honest, mirroring the offensive gate's discipline:
+**fail closed** (the check blocks the merge; never `continue-on-error` a security
+gate green), and **least-privilege the pipeline itself** (pin third-party actions
+to a SHA, source secrets from the CI manager, minimal token scope) — a scanner
+running inside an injectable, over-privileged workflow is a weak gate. Proposing a
+gate is in charter as part of a fix's `mitigation`; wiring the whole CI is the
+user's call, not a silent expansion of the one-finding diff.

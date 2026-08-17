@@ -17,6 +17,7 @@ rotation call, the judgement).
 - [4. .gitignore coverage](#4-gitignore-coverage)
 - [5. If a secret is found: rotate, don't just delete](#5-if-a-secret-is-found-rotate-dont-just-delete)
 - [6. When to escalate to a deep scanner](#6-when-to-escalate-to-a-deep-scanner)
+- [7. Wiring the scan into CI and pre-commit (shift-left)](#7-wiring-the-scan-into-ci-and-pre-commit-shift-left)
 
 ______________________________________________________________________
 
@@ -133,3 +134,50 @@ when you need more:
 The first-line scanner and the deep scanners are complementary: run the bundled
 one every task (it costs nothing), reach for the heavy ones when the surface is
 the whole history or the risk is high.
+
+______________________________________________________________________
+
+## 7. Wiring the scan into CI and pre-commit (shift-left)
+
+A guard the assistant runs manually is good; a gate the repo runs on every commit
+is better — it catches the human contributors too. Two enforcement points, both
+using the same `--strict` exit code (non-zero on any CRITICAL/HIGH). (This section
+draws on the Apache-2.0 DevSecOps corpus in `CREDITS.md`.)
+
+**Pre-commit hook (local, fastest feedback).** Scan the staged tree before the
+commit is created, so a secret never even lands in a local commit:
+
+```yaml
+# .pre-commit-config.yaml
+- repo: local
+  hooks:
+    - id: ray-secrets
+      name: ray-cloak secret scan
+      entry: python3 scripts/ray_secrets.py . --strict
+      language: system
+      pass_filenames: false
+```
+
+Pair it with the upstream `gitleaks` pre-commit hook for entropy/history coverage
+— the two are complementary (§6). A hook the developer can `--no-verify` past is a
+speed bump, not a wall; the CI gate below is the wall.
+
+**CI gate (server-side, authoritative).** Run the scan as a required check so a
+push carrying a secret fails the pipeline and cannot merge:
+
+```yaml
+# .github/workflows or any CI: fail the job on a CRITICAL/HIGH secret
+- run: python3 scripts/ray_secrets.py . --strict   # exit 3 blocks the merge
+- run: gitleaks detect --redact --exit-code 1       # deep/history pass
+```
+
+**Rules that make the gate honest:**
+
+- **Fail closed.** The gate blocks on CRITICAL/HIGH; do not let a green build ship
+  a leaked key because the step was `continue-on-error`.
+- **A blocked secret is already compromised** — the gate stops the *next* leak,
+  but if the value was ever pushed, apply §5 (rotate), don't just delete.
+- **Secure the workflow file itself.** CI config is a high-risk file (§1): pin
+  third-party actions to a commit SHA, use the CI secret manager (never inline
+  secrets in the YAML), and grant the job the least token scope it needs. A secret
+  scanner that runs inside an over-privileged, injectable pipeline is a weak gate.

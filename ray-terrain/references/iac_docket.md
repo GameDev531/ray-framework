@@ -13,6 +13,7 @@ honest that the bundled scanner is high-signal and bounded, not a full engine.
 - [2. The Misconfiguration Checklist](#2-the-misconfiguration-checklist)
 - [3. Live Cloud Posture (read-only, gated)](#3-live-cloud-posture-read-only-gated)
 - [4. Driving Policy Engines](#4-driving-policy-engines)
+- [5. Container Image Hardening & Scanning](#5-container-image-hardening--scanning)
 
 ______________________________________________________________________
 
@@ -94,3 +95,39 @@ Merge an engine's finding and the bundled scanner's finding for the **same
 resource+issue** into one (dedupe by `file:line`+rule intent) so the report isn't
 doubled. Prefer the engine's rule id and reference when both fire; keep the
 bundled scanner as the always-available floor.
+
+______________________________________________________________________
+
+## 5. Container Image Hardening & Scanning
+
+§2 checks the Dockerfile *as text* (the bundled scanner's `docker-*` rules —
+`USER root`, `:latest`, `ADD <url>`). This section covers the **built image** as a
+supply-chain artifact: its base, its layers, and its known CVEs. (Compiled with
+the Apache-2.0 DevSecOps corpus in `CREDITS.md`.)
+
+**The Dockerfile / image hardening checklist:**
+
+| Check | Failing shape |
+|---|---|
+| Minimal base | A full `ubuntu`/`node` image where `-slim`, `distroless`, or `alpine` would do — every extra package is attack surface |
+| Base pinned to a digest | `FROM node:20` (mutable tag) instead of `FROM node:20-slim@sha256:…` — an unpinned base is a silent supply-chain change |
+| Non-root runtime | No `USER` directive (runs as root), or a root `ENTRYPOINT`; add a dedicated non-root user (also §2 `docker-no-user`) |
+| No secrets in layers | A build `ARG`/`ENV`/`COPY` that bakes a token/key into a layer — it persists in image history even if later `RM`'d. Use BuildKit `--secret` mounts, never `ARG SECRET` |
+| Drop capabilities / no privileged | K8s `securityContext` running privileged or with default caps — drop all, add only what's needed (crosses into §2 K8s checks) |
+| Read-only root filesystem | Writable container FS where `readOnlyRootFilesystem: true` + a tmpfs would do |
+| Multi-stage build | Build tools (compilers, `git`, package caches) shipped in the final image — split build and runtime stages so the runtime image carries only the artifact |
+| `.dockerignore` present | No `.dockerignore`, so `.env`, `.git`, and local secrets get `COPY . .`'d into the image (cross-reference `ray-cloak`) |
+
+**Driving the image scanner (when installed):**
+
+- `trivy image <image:tag> --format json` — OS-package and language-dependency
+  CVEs in the built image, plus secret and misconfig detection in layers.
+- `grype <image>` / `docker scout cves <image>` — equivalent CVE surfaces.
+- `dockle <image>` / `trivy image --scanners misconfig` — CIS-style image
+  best-practice linting.
+
+Normalize into the same finding shape and severity as §4. **Reachability still
+decides** (as in `ray-manifest`): a CVE in an OS package the app never invokes is
+lower than one on the runtime's hot path — trace it or say you did not. Image CVEs
+are `ray-manifest`'s SCA discipline applied to the container layer; cross-reference
+rather than double-count when both a lockfile and its image are scanned.
