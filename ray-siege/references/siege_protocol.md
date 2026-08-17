@@ -104,8 +104,12 @@ by disposable state, reproducible between rounds.
 4. **Seed canaries.** Create the inventory §1.3 relies on: at least one canary
    user account (known credentials, unique marker field), one canary data row per
    sensitive table, one canary file at `/tmp/ray-canary-<uuid>`, and a second
-   loopback listener for SSRF proofs. Record every canary id in the ledger so both
-   roles and the report can reference them.
+   loopback listener for SSRF proofs. When the target runs in a container, also
+   plant a **host-side** canary outside the container (`/tmp/ray-canary-host-<uuid>`)
+   so a container-escape escalation (`live_exploitation.md` §4) can be proven by
+   reading it — a host canary read from inside the container is unambiguous escape
+   proof, with zero harm. Record every canary id in the ledger so both roles and
+   the report can reference them.
 5. **Bind to loopback** on the chosen port; confirm the app answers on
    `--target_url`. Re-run the §1.1 gate against the actual bound address.
 6. **Pin the round.** Note the current commit as the round baseline. The red team

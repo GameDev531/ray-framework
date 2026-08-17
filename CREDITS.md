@@ -35,6 +35,8 @@ the underlying technique knowledge and its standards mappings deserve credit.
     fix closed (SAST/DAST/secret/SCA/IaC in the pipeline).
   - `ray-vault/references/datastore_hardening.md` — cryptographic-primitive audit
     checklist and post-quantum (harvest-now-decrypt-later) readiness.
+  - `ray-siege/references/live_exploitation.md` — container-escape-to-host as an
+    in-charter reaver escalation (proven with a host-side canary).
 
 Per the Apache-2.0 terms, the upstream copyright notices and license are
 preserved by this attribution; the upstream `LICENSE` (Apache-2.0) is compatible
