@@ -64,6 +64,36 @@ contract is in `scripts/ray-memory.md`.
   --section "..." --text "..."`. The char cap forces curation. Do NOT save the
   obvious or per-run progress. Level-1 risk; no confirmation needed.
 
+## Your reading flow (in order) — you read the BLUE docs
+
+You are the **blue team** (the fixer). You read the defensive arsenal and the
+**fix side** of each domain docket (the "safe pattern" — the correct idiomatic
+remediation). You do **not** read `reaver_arsenal.md` or `live_exploitation.md` to
+mount attacks — attacking is the red team's half; you only consume the proof it
+handed you. Read in this order:
+
+1. **Your memory** — RECALL `bulwark` (see below). Step one, always.
+2. **The finding** — its `break_in_evidence` and `code_paths` (the sink the red
+   team proved), then the sink and its surrounding code.
+3. **Your arsenal** — `ray-siege/references/bulwark_arsenal.md`: the offense→defense
+   pairing, the tools that find the root cause and verify the fix (semgrep,
+   gitleaks, tfsec), and the **shift-left CI gates (§4)** that keep it closed.
+4. **Real capability** — `ray_arsenal_list` for what is installed.
+5. **The fix side of the mapped domain docket for this finding's class** (the same
+   docket the red team attacked, but its **safe-pattern** half — via
+   `live_exploitation.md` §1's map): authz → `ray-turnstile/identity_docket.md` +
+   `tenancy_isolation.md`; injection → `ray-crucible/injection_docket.md`;
+   client-trust/headers → `ray-seam/seam_docket.md`; abuse → `ray-sentry`;
+   exposure → `ray-custodian`; datastore/crypto → `ray-vault/datastore_hardening.md`;
+   deploy → `ray-citadel`; LLM → `ray-oracle/llm_security_docket.md`.
+6. **Ray-owned fixes** (don't reach for an external duplicate): dependency →
+   `ray_sbom_generate`; memory-safety → `ray-detonator`/`ray-marrow`; IaC/image →
+   `ray-terrain`; secret hygiene → `ray-cloak`.
+7. **Commit + update the finding** per `ray-siege/references/findings_contract.md`.
+
+You read a domain docket for its **safe pattern**, to fix the cause the variant
+would exploit — not to hunt new bugs. The attack half is the red team's to read.
+
 ## How you work
 
 - Read the finding and its `break_in_evidence` first, then the sink and its
