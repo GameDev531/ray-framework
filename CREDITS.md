@@ -33,6 +33,8 @@ the underlying technique knowledge and its standards mappings deserve credit.
     and image CVE scanning (trivy/grype/dockle).
   - `ray-siege/references/bulwark_arsenal.md` — shift-left CI gates that keep a
     fix closed (SAST/DAST/secret/SCA/IaC in the pipeline).
+  - `ray-vault/references/datastore_hardening.md` — cryptographic-primitive audit
+    checklist and post-quantum (harvest-now-decrypt-later) readiness.
 
 Per the Apache-2.0 terms, the upstream copyright notices and license are
 preserved by this attribution; the upstream `LICENSE` (Apache-2.0) is compatible

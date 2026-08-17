@@ -158,6 +158,32 @@ These overlap `/ray-turnstile` (signing/JWT) and `/ray-custodian` (transport
 headers); report the crypto-usage defect where you found it and let
 `/ray-condenser` merge.
 
+### Cryptographic-primitive audit & post-quantum readiness
+
+A cross-cutting sweep of *which primitives the application uses*, independent of
+where the data sits — the checklist a standalone cryptographic audit runs.
+(Compiled with the Apache-2.0 cryptography corpus in `CREDITS.md`.)
+
+| Area | Expected | Failing shape |
+|---|---|---|
+| Hash function | SHA-256+ for integrity; a password KDF (argon2/bcrypt/scrypt/PBKDF2) for passwords | MD5/SHA-1 for signatures or integrity; a bare fast hash for passwords (cross-ref `/ray-turnstile` `CRED`) |
+| Symmetric cipher & mode | AES-GCM / ChaCha20-Poly1305 (AEAD) | DES/3DES/RC4; AES-**ECB** (leaks plaintext structure); CBC without an authenticated MAC |
+| IV / nonce | Unique per message; random or counter per the mode's rule | A static/hardcoded IV, or a nonce reused under one key (catastrophic for GCM/ChaCha) |
+| Asymmetric | RSA ≥ 2048 with OAEP/PSS; or Ed25519 / ECDSA-P256 | RSA < 2048, PKCS#1 v1.5 encryption, textbook RSA, custom curves |
+| Randomness | A CSPRNG (`secrets`, `crypto.randomBytes`, `/dev/urandom`) | `Math.random()`, `rand()`, `mt_rand()`, or a seeded PRNG for keys/tokens/IVs |
+| TLS baseline | TLS 1.3 preferred, ≥ 1.2 floor, forward-secret suites only | TLS ≤ 1.1 enabled, RC4/3DES/export suites, renegotiation flaws |
+| Key custody | Generated and held in a KMS/HSM; rotation path; one key per purpose | Keys on disk, in an image layer, or committed (cross-ref `/ray-cloak`); no rotation |
+
+**Post-quantum readiness (harvest-now, decrypt-later).** Data with a long secrecy
+lifetime (health, legal, identity, long-lived signing keys) encrypted or
+key-exchanged with *classical-only* algorithms is exposed to a future adversary
+who **captures the ciphertext today and decrypts it once a cryptographically
+relevant quantum computer exists**. Flag long-lived confidential flows that lack a
+migration plan to hybrid / post-quantum KEX (e.g. ML-KEM / X25519-hybrid) and
+PQC signatures (ML-DSA) — this is a *forward-looking* finding (severity scaled to
+the data's secrecy lifetime), not an immediate break; state it as such and
+cross-reference `/ray-steward` for the migration-cadence angle.
+
 ______________________________________________________________________
 
 ## 4. Credentials
