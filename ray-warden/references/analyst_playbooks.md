@@ -15,6 +15,8 @@ of that class arrives; read §1 and §7 every run.
 - [5. Playbook: Data Exfiltration Signal](#5-playbook-data-exfiltration-signal)
 - [6. Playbook: IoC / Threat-Intel Hit](#6-playbook-ioc--threat-intel-hit)
 - [7. Correlation and the Confidence Rubric](#7-correlation-and-the-confidence-rubric)
+- [8. Proactive Threat Hunting (hypothesis-driven)](#8-proactive-threat-hunting-hypothesis-driven)
+- [9. Frameworks & Evidence Discipline](#9-frameworks--evidence-discipline)
 
 ______________________________________________________________________
 
@@ -169,6 +171,14 @@ single feed asserting maliciousness is not authority (`autonomy_tiers.md` §5).
 reversible) when corroborated; otherwise **watchlist** it (T1) and raise
 monitoring — do not contain on an uncorroborated feed hit.
 
+**Pyramid of Pain — weight the indicator by type.** Not all IoCs are equal: a hash
+is trivially changed (bottom), then IP, then domain, then host/network artifacts
+and tools, then **TTPs** at the top (costliest for the adversary to change). A
+detection anchored on a hash/IP is brittle and expires fast; one anchored on a
+technique (a TTP, cross-referenced to the ATT&CK id in §9) is durable. Score a
+lone hash/IP match lower, and prefer promoting the *behavior* behind it to a hunt
+hypothesis (§8) over chasing the atomic indicator.
+
 ______________________________________________________________________
 
 ## 7. Correlation and the Confidence Rubric
@@ -206,3 +216,79 @@ understand why the analyst believes what it believes.
 highest-value lesson: promote it to curated memory (a benign pattern that keeps
 false-positiving; a subtle malicious pattern that scored too low) per the agent's
 NOTICE→FILE step, so the next shift scores it right.
+
+______________________________________________________________________
+
+## 8. Proactive Threat Hunting (hypothesis-driven)
+
+The playbooks above are **reactive** — an alert arrives and you triage it. Hunting
+is the **proactive** complement: you go looking for the adversary the alerts
+missed. Warden is the analyst *brain* here too — it supplies the disciplined hunt
+loop and lets the environment's SIEM/EDR (Splunk, Elastic, Sentinel, CrowdStrike,
+Sysmon, whatever is present) supply the telemetry. (Technique adapted from the
+Apache-2.0 threat-hunting corpus in `CREDITS.md`.)
+
+**The hunt loop — six steps, every hunt:**
+
+1. **Formulate a testable hypothesis.** Not "is there evil?" but a falsifiable
+   claim tied to a specific technique — "an adversary is using WMI for lateral
+   movement (T1047)", "there is beaconing egress on a fixed cadence (T1071)".
+   Sources: an ATT&CK **gap analysis** (techniques your detections don't cover),
+   fresh threat intel about an active campaign, or a hunch from a prior case.
+2. **Identify the data sources** that would confirm or refute it — which logs,
+   which EDR telemetry, which Sysmon event ids. If the data isn't collected, the
+   real finding is a **visibility gap**; record it.
+3. **Query** the SIEM/EDR for those events.
+4. **Analyze** for anomalies, correlating across sources (§7's independence rule
+   applies — one source is a lead, convergence is a signal).
+5. **Validate TP vs FP** through context and a baseline — a hunt's output is
+   mostly benign; the discipline is separating the rare true positive from normal.
+6. **Correlate** confirmed activity to the broader attack chain and the actor's
+   TTPs, and feed anything real into a case (via the triage frame §1).
+
+**Two durable outputs, even on a "negative" hunt:** a **new detection** (promote a
+validated hunt query to a standing rule so it becomes reactive next time) and a
+**visibility gap** (a data source you needed and didn't have). A hunt that finds
+no adversary but produces one new detection and one logging gap is a success, not
+a waste — record both. Never invent a positive to justify the hunt.
+
+______________________________________________________________________
+
+## 9. Frameworks & Evidence Discipline
+
+The shared vocabulary and the handling rules that keep an investigation credible.
+(Compiled with the Apache-2.0 corpus in `CREDITS.md`.)
+
+**Frameworks — use the right lens for the question:**
+
+- **MITRE ATT&CK** — technique-level granularity. Anchor every detection, hunt
+  hypothesis, and case to a technique id (`T####`) so findings are comparable and
+  coverage is measurable. This is the default lens.
+- **Cyber Kill Chain** — the 7-phase progression (recon → weaponize → deliver →
+  exploit → install → C2 → actions). Use it to say *how far* an adversary got and
+  to communicate to non-technical stakeholders; pair with ATT&CK for technique
+  detail, don't use it alone.
+- **Diamond Model** — adversary / capability / infrastructure / victim. Use it to
+  correlate across cases (shared infrastructure or capability links two incidents)
+  and to structure attribution — while heeding the attribution caution below.
+
+**Evidence discipline (DFIR) — when a case escalates to collection:**
+
+- **Order of volatility.** Collect most-volatile first: CPU/registers/cache → RAM
+  (a memory image before pulling power) → network state (connections, ARP) → disk
+  → logs/archives. Powering off to "preserve" the disk destroys the memory image
+  that held the injected code and the live C2 socket.
+- **Preserve, then analyze.** Work on a **copy** (image the disk, snapshot the
+  memory); hash the original and the copy and record that they match, so the
+  evidence is verifiable and the original is untouched.
+- **Chain of custody.** Record who collected what, when, from where, and every
+  hand-off. An analysis is only as trustworthy as the provenance of what it ran on.
+- **Containment is not eradication.** Isolating a host (a reversible T2 action)
+  stops the bleeding; it does not remove persistence. Scope the full foothold
+  (the hunt loop §8) before declaring an incident closed.
+
+**Attribution caution.** Naming an actor is the least reliable and most
+over-reached step. Infrastructure and tooling are shared, rented, and planted as
+false flags. State attribution as a **confidence-scored hypothesis** (§7's rubric),
+never a fact, and never let a shaky attribution drive an irreversible action —
+that stays behind the human gate (`autonomy_tiers.md`).
