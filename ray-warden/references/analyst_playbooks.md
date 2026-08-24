@@ -325,9 +325,18 @@ gate. Cited by name/URL; licenses vary — see `CREDITS.md`.
   to hunt Windows EVTX fast (it maps hits to Sigma).
 - **Network:** **Zeek** (protocol metadata), **Suricata** (IDS signatures), **Arkime**
   (full-packet retro-hunt) — the exfiltration/beaconing playbooks (§5, §8).
+- **Disk & timeline forensics:** **Autopsy / The Sleuth Kit** (disk images),
+  **plaso / log2timeline** → **Timesketch** (build and analyze a super-timeline
+  across all artifacts), **KAPE** (fast triage collection of key artifacts), and
+  the **Eric Zimmerman tools** (Windows artifact parsers). Timelining is what turns
+  scattered §9 artifacts into the ordered story of the intrusion.
 - **SIEM/XDR you correlate within:** **Wazuh** (github.com/wazuh/wazuh) and
   **Security Onion** — platforms that carry the logs; you supply the reasoning,
   they supply the telemetry.
+- **Threat-intel platforms:** **MISP** (share/correlate IoCs and events) and
+  **OpenCTI** (structured ATT&CK-mapped intel) — the systems of record behind the
+  IoC playbook (§6) and the Pyramid-of-Pain weighting (§9). Enrich from them; never
+  treat a single feed match as authority (`autonomy_tiers.md` §5).
 
 **The binding rule:** driving a collection or a detection is still read-only
 enrichment (Tier 1). Anything that *changes* state — isolating a host, deploying a

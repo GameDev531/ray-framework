@@ -85,11 +85,15 @@ Banned here: mass timing floods (`-T5`, `--max-rate`) — bounded scans only.
 
 | Tool | Drives | Canary | Docket |
 |---|---|---|---|
-| `sqlmap` | `--batch --level 2 --risk 1 --technique BEUST` on the URL | the **seeded canary row** surfaces, or a stable boolean/time differential | `ray-crucible` injection_docket |
+| `sqlmap` | `--batch --level 2 --risk 1 --technique BEUST` on the URL | the **seeded canary row** surfaces, or a stable boolean/time differential | `ray-crucible` injection_docket (SQLI) |
+| `dalfox` | XSS discovery (reflected/DOM) on a parameterized URL | a unique inert marker **executing** in headless Chromium — never cookie theft | `ray-crucible` injection_docket (XSS) |
+| `tplmap` | SSTI detection on the URL (evaluation proof only) | a unique arithmetic/marker **evaluated** in the response (`{{7*7}}`→`49`) | `ray-crucible` injection_docket (SSTI) |
 
-Banned here (hard): `--os-shell`, `--os-cmd`, `--os-pwn`, `--sql-shell`,
-`--file-write`, `--file-dest`, `--dump-all`, `--all`. Prove a write with **one**
-canary insert by hand — never sqlmap's write/exec primitives.
+Banned here (hard): for `sqlmap` — `--os-shell`, `--os-cmd`, `--os-pwn`,
+`--sql-shell`, `--file-write`, `--file-dest`, `--dump-all`, `--all`; for `tplmap` —
+`--os-cmd`, `--os-shell`, `--reverse`, `--bind-shell`, `--upload`, `--download`.
+Prove a write with **one** canary insert by hand, XSS with a browser marker, SSTI
+with the evaluated arithmetic — never the write/exec/shell primitives.
 
 ### API / identity
 
@@ -169,10 +173,21 @@ target, non-destructive, canary proof). Cited by name/URL; licenses vary — see
 | **The Hacker Recipes** (thehacker.recipes) | Deep technique writeups; the **web/API** sections are in-charter. Its AD/network sections are **not** — ignore them, they belong to the excluded categories (§3). | web/API classes only |
 
 **Tooling corpora already covered by the arsenal:** `nuclei`, `httpx`, `nmap`,
-`ffuf`, `sqlmap`, `garak`, `promptfoo` are all §2 entries — drive them via
-`ray_arsenal_run`, don't re-derive. **OWASP ZAP** is a heavier DAST alternative to
-the §2 web tools; if it is installed, it can seed candidates the same way `nuclei`
-does — a scanner still only seeds, a canary still proves (§0).
+`ffuf`, `sqlmap`, `dalfox`, `tplmap`, `garak`, `promptfoo` are all §2 entries —
+drive them via `ray_arsenal_run`, don't re-derive. **OWASP ZAP** is a heavier DAST
+alternative to the §2 web tools; if it is installed, it can seed candidates the
+same way `nuclei` does — a scanner still only seeds, a canary still proves (§0).
+
+**More web/API tools worth reaching for if installed** (not in the runnable
+registry, but in-charter — drive them by hand under the same gate):
+
+| Tool | For | Note |
+|---|---|---|
+| `schemathesis` | Property-based API fuzzing from an OpenAPI/GraphQL schema | Powerful, but it exercises **mutating** operations (POST/DELETE) broadly — only run it against the siege's disposable, re-seeded DB (`siege_protocol.md` REBUILD resets state each round), never a target whose data must survive. Filter to safe methods when unsure. |
+| `kiterunner` | API route/endpoint discovery (finds undocumented routes) | Feeds the API-authz classes (`ray-turnstile` BOLA/BFLA); a discovered route is a lead, not a finding. |
+| `dirsearch` / `wfuzz` | Content discovery | Alternatives to `ffuf`; same wordlists (SecLists). |
+| `WPScan` / `droopescan` / `joomscan` | CMS-specific scans | Only when the local target **is** WordPress/Drupal/Joomla; a version/plugin lead still needs its own canary proof. |
+| `mitmproxy` | Intercept + replay + tamper HTTP(S) | Useful to capture a request and mutate it for IDOR/mass-assignment/JWT tests; the loopback-only rule still binds every replayed request. |
 
 **Recon corpora route elsewhere.** `subfinder`, `amass`, and passive
 attack-surface OSINT are **`ray-quarry`'s** job, not the siege's — the reaver

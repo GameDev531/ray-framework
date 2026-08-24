@@ -250,6 +250,33 @@ REGISTRY = {
         "purpose": "SQLi detection/extraction against the local app "
                    "(read/boolean/time only; never --os-*/--file-write).",
     },
+    "dalfox": {
+        "side": "offense", "category": "injection", "binary": "dalfox",
+        "arg_kind": "loopback_url",
+        "argv": ["dalfox", "url", "{TARGET}", "--no-color", "--silence",
+                 "--skip-bav"],
+        "version": ["version"], "banned": [],
+        "fallback": "Inject a unique inert marker (e.g. ray-xss-<uuid> in a "
+                    "<svg onload> payload) and confirm execution in headless "
+                    "Chromium via Playwright; no cookie theft against a real victim.",
+        "docket": "ray-crucible/references/injection_docket.md",
+        "purpose": "XSS discovery (reflected/DOM). Put the injectable parameter in "
+                   "the URL; verify any hit with a browser + canary marker.",
+    },
+    "tplmap": {
+        "side": "offense", "category": "injection", "binary": "tplmap",
+        "arg_kind": "loopback_url",
+        "argv": ["tplmap", "-u", "{TARGET}"],
+        "version": [],
+        "banned": ["--os-cmd", "--os-shell", "--reverse", "--bind-shell",
+                   "--upload", "--download", "--force-overwrite"],
+        "fallback": "Send a unique arithmetic/marker probe per engine "
+                    "(`{{7*7}}`, `${7*7}`, `#{7*7}`) and confirm the evaluated "
+                    "result in the response — never the RCE plugins.",
+        "docket": "ray-crucible/references/injection_docket.md",
+        "purpose": "SSTI detection against the local app (evaluation proof only; "
+                   "never the --os-*/shell/upload plugins).",
+    },
     # ---- offense: API / identity ------------------------------------------
     "arjun": {
         "side": "offense", "category": "api", "binary": "arjun",

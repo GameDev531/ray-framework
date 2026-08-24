@@ -66,6 +66,13 @@ coverage (referenced, not copied):
   covered / in-charter-gap / off-charter status).
 - LOLBAS (lolbas-project.github.io) and GTFOBins (gtfobins.github.io) —
   living-off-the-land detection references in `ray-warden` §11.
+- eudk/awesome-cybersecurity-tools — used as a tool index to source the
+  missing in-charter tools: `dalfox` (XSS) and `tplmap` (SSTI) added to the
+  runnable arsenal (`scripts/ray_arsenal.py`, `reaver_arsenal.md` §2), plus
+  `schemathesis`/`kiterunner`/`dirsearch`/CMS-scanners/`mitmproxy` as reaver
+  references (§4) and the DFIR/intel platforms (Autopsy, plaso/Timesketch, KAPE,
+  MISP, OpenCTI) in `ray-warden` §10. Off-charter categories (AD/Windows,
+  wireless, C2, tunneling/pivoting, RE) were reviewed and excluded.
 
 ## Apache-2.0 attribution (continued)
 
