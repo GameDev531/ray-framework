@@ -38,6 +38,28 @@ the underlying technique knowledge and its standards mappings deserve credit.
   - `ray-siege/references/live_exploitation.md` — container-escape-to-host as an
     in-charter reaver escalation (proven with a host-side canary).
 
+## Canonical security corpora referenced (not copied)
+
+The agent dockets point analysts and operators at well-known community and vendor
+security corpora **by name and URL** — they are cited as references to consult, not
+copied into this repo. Each is governed by its own upstream license; consult the
+project for terms. Referenced in:
+
+- `ray-siege/references/reaver_arsenal.md` §4 — PayloadsAllTheThings, SecLists,
+  OWASP Cheat Sheet Series, The Hacker Recipes (web/API sections only).
+- `ray-siege/references/bulwark_arsenal.md` §5 — OWASP Cheat Sheet Series, OWASP
+  SKF, OWASP ModSecurity Core Rule Set.
+- `ray-warden/references/analyst_playbooks.md` §10 — Sigma, YARA, MITRE ATT&CK
+  STIX data, Atomic Red Team, osquery, Velociraptor, Volatility 3, Chainsaw, Zeek,
+  Suricata, Arkime, Wazuh, Security Onion.
+
+Off-charter offensive corpora from the same source list (Metasploit, Impacket,
+BloodHound, CrackMapExec, Responder, Evilginx2, Mimikatz, WinPEAS, Caldera) are
+deliberately **not** integrated — they fall outside Ray's local-only,
+non-destructive charter; the dockets say so and why.
+
+## Apache-2.0 attribution (continued)
+
 Per the Apache-2.0 terms, the upstream copyright notices and license are
 preserved by this attribution; the upstream `LICENSE` (Apache-2.0) is compatible
 with this project's MIT license for the adapted, non-verbatim technique material.

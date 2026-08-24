@@ -18,6 +18,7 @@ This is the blue-team counterpart to `reaver_arsenal.md`. It binds to the same
 - [2. The tools](#2-the-tools)
 - [3. Already covered by a Ray tool](#3-already-covered-by-a-ray-tool)
 - [4. Making the fix stick — shift-left (CI gates)](#4-making-the-fix-stick--shift-left-ci-gates)
+- [5. Secure-pattern references — the correct fix, per class](#5-secure-pattern-references--the-correct-fix-per-class)
 
 ______________________________________________________________________
 
@@ -137,3 +138,27 @@ to a SHA, source secrets from the CI manager, minimal token scope) — a scanner
 running inside an injectable, over-privileged workflow is a weak gate. Proposing a
 gate is in charter as part of a fix's `mitigation`; wiring the whole CI is the
 user's call, not a silent expansion of the one-finding diff.
+
+______________________________________________________________________
+
+## 5. Secure-pattern references — the correct fix, per class
+
+Tools find the cause; these corpora tell you the **idiomatic correct fix** so the
+patch closes the class, not just the reaver's one payload (§0). Read the class
+reference before writing the fix. Cited by name/URL; licenses vary — see
+`CREDITS.md`.
+
+| Reference | Use it for | Fix class |
+|---|---|---|
+| **OWASP Cheat Sheet Series** (github.com/OWASP/CheatSheetSeries) | The fix bible. One cheat sheet per class states the correct control: *SQL Injection Prevention* (parameterized queries), *XSS Prevention* + *DOM XSS*, *Deserialization*, *SSRF Prevention*, *Authentication* / *Session Management* / *JWT for Java*, *Authorization*, *Mass Assignment*, *CORS*, *Content Security Policy*, *Secrets Management*, *Password Storage*. This is the same series the red team reads for the attack — you read it for the neutralizer. | every §1 class |
+| **OWASP SKF — Security Knowledge Framework** (github.com/SecurityKnowledgeFramework/SKF) | Secure-development requirements and code examples per requirement; useful when the fix is a design control, not a one-line neutralizer, and to justify the regression test. | design-level fixes |
+| **OWASP ModSecurity Core Rule Set** (github.com/coreruleset/coreruleset) | A **defense-in-depth** layer, never the primary fix: the CRS rule for a class shows the generic attack shape a WAF blocks, which helps you reason about bypass variants — but the code-level neutralizer (parameterize, encode, validate) is the real fix. A WAF rule that "blocks the payload" is exactly the overfit §0 warns against. | defense-in-depth only |
+
+**Rule that binds this section:** a reference gives you the *pattern*; the fix is
+still the minimal, idiomatic, framework-native change in the code the finding
+anchors (charter rule 2). Cite the cheat sheet in the `mitigation`, apply the
+neutralizer at the sink, add the regression test — never paste a WAF rule or a
+generic snippet in place of fixing the cause.
+
+**Tooling already covered:** `semgrep` (§2), `trivy`/`gitleaks` (§2), `ray_sbom`,
+`ray-detonator` (§3). **OWASP ZAP** pairs with the DAST CI gate (§4).

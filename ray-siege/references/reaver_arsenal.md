@@ -16,6 +16,7 @@ Everything here operates under `siege_protocol.md` §1 — nothing below overrid
 - [1. How to drive a tool](#1-how-to-drive-a-tool)
 - [2. The tools, by class](#2-the-tools-by-class)
 - [3. Deliberately excluded — and what to do instead](#3-deliberately-excluded--and-what-to-do-instead)
+- [4. Reference corpora — payloads, wordlists, technique catalogs](#4-reference-corpora--payloads-wordlists-technique-catalogs)
 
 ______________________________________________________________________
 
@@ -148,3 +149,41 @@ the non-destructive gate). These are left out on purpose:
 Reporting tools are excluded too, but for the opposite reason: `ray-gauge` and
 `ray-chronicle` already own findings output — the arsenal feeds them, it does not
 duplicate them.
+
+______________________________________________________________________
+
+## 4. Reference corpora — payloads, wordlists, technique catalogs
+
+The *tools* above execute; these *corpora* are where you get the payload, the
+wordlist, or the technique detail to feed them. They are references to consult,
+not binaries to run, and the same gate binds anything you build from them (loopback
+target, non-destructive, canary proof). Cited by name/URL; licenses vary — see
+`CREDITS.md`.
+
+| Corpus | Use it for | Maps to |
+|---|---|---|
+| **PayloadsAllTheThings** (github.com/swisskyrepo/PayloadsAllTheThings) | The canonical per-class payload + technique reference. Its top-level dirs map almost 1:1 to your classes: `SQL Injection`, `NoSQL Injection`, `XSS`, `Server Side Template Injection`, `XXE`, `Insecure Deserialization`, `Server Side Request Forgery`, `Command Injection`, `Directory Traversal`, `JSON Web Token`, `OAuth`, `GraphQL Injection`, `CORS Misconfiguration`, `Type Juggling`, `Prototype Pollution`, `Request Smuggling`, `Upload Insecure Files`. Read the class folder before hand-crafting a payload. | every §2 class + the injection docket |
+| **SecLists** (github.com/danielmiessler/SecLists) | Wordlists to feed the tools: `Discovery/Web-Content/*` for `ffuf`/`nikto` content discovery, `Fuzzing/*` for parameter/format fuzzing (`arjun`), `Passwords/*` and `Usernames/*` for a **bounded** credential-stuffing proof (≈20 tries, never a flood), `Payloads/*` for injection primitives. | `ffuf`, `arjun`, bounded auth burst |
+| **OWASP Cheat Sheet Series** (github.com/OWASP/CheatSheetSeries) | The attacker-relevant "what the control should be" — read the class cheat sheet to know exactly which check to try to bypass. (The blue team reads the same series for the fix — `bulwark_arsenal.md`.) | every class |
+| **The Hacker Recipes** (thehacker.recipes) | Deep technique writeups; the **web/API** sections are in-charter. Its AD/network sections are **not** — ignore them, they belong to the excluded categories (§3). | web/API classes only |
+
+**Tooling corpora already covered by the arsenal:** `nuclei`, `httpx`, `nmap`,
+`ffuf`, `sqlmap`, `garak`, `promptfoo` are all §2 entries — drive them via
+`ray_arsenal_run`, don't re-derive. **OWASP ZAP** is a heavier DAST alternative to
+the §2 web tools; if it is installed, it can seed candidates the same way `nuclei`
+does — a scanner still only seeds, a canary still proves (§0).
+
+**Recon corpora route elsewhere.** `subfinder`, `amass`, and passive
+attack-surface OSINT are **`ray-quarry`'s** job, not the siege's — the reaver
+attacks the single loopback target the orchestrator stood up, it does not enumerate
+external infrastructure. If external recon is wanted, invoke `ray-quarry` under its
+own scope-attestation gate.
+
+**Still excluded (same reason as §3).** Metasploit, Impacket, BloodHound,
+CrackMapExec, Responder, Evilginx2, Mimikatz, WinPEAS — AD / C2 / network-lateral /
+phishing / Windows-credential post-exploitation. They break the local-only,
+non-destructive, single-app charter by construction. **LinPEAS** is the one edge
+case: as a *local privilege-escalation enumerator on the disposable target*, its
+checklist can inform an in-container escalation after a proven RCE
+(`live_exploitation.md` §4) — consult its checks, but keep the host-canary,
+non-destructive proof discipline; never run it against a host you did not stand up.
