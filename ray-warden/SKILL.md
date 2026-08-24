@@ -92,7 +92,7 @@ only when a step needs it.
 | File | Read it | What it carries |
 |---|---|---|
 | `references/autonomy_tiers.md` | before Step 0, every run | The three-tier authority gate (T1 autonomous / T2 allowlisted-reversible / T3 human-only, fail-closed), the circuit breaker, the append-only audit format, the human decision-packet, and prompt-injection resistance |
-| `references/analyst_playbooks.md` | at Step 2, per alert class; §8–§9 when hunting or escalating to collection | The five-beat triage frame, the per-class playbooks (auth, phishing, endpoint, exfiltration, IoC + the Pyramid of Pain), the correlation method and confidence rubric that gates autonomy, the **proactive hunt loop** (§8), and the frameworks (ATT&CK/kill-chain/Diamond) + DFIR evidence discipline (§9) |
+| `references/analyst_playbooks.md` | at Step 2, per alert class; §8–§11 when hunting, escalating to collection, or scoping a chain | The five-beat triage frame, the per-class playbooks (auth, phishing, endpoint, exfiltration, IoC + the Pyramid of Pain), the correlation method and confidence rubric that gates autonomy, the **proactive hunt loop** (§8), the frameworks (ATT&CK/kill-chain/Diamond) + DFIR evidence discipline (§9), the detection/DFIR reference tooling (§10), and the **full ATT&CK kill chain as detection targets** + living-off-the-land (LOLBAS/GTFOBins) + the PICERL IR lifecycle (§11) |
 | `references/findings_contract.md` | before the first case, and at Step 3 | The case schema, case-vs-finding, the severity↔confidence separation, the four computed fields, the case-specific fields/enums, and INV-W1/INV-W2 |
 
 The analyst role is dispatched as a subagent whose definition lives in the

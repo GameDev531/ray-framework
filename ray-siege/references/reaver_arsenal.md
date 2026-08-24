@@ -17,6 +17,7 @@ Everything here operates under `siege_protocol.md` §1 — nothing below overrid
 - [2. The tools, by class](#2-the-tools-by-class)
 - [3. Deliberately excluded — and what to do instead](#3-deliberately-excluded--and-what-to-do-instead)
 - [4. Reference corpora — payloads, wordlists, technique catalogs](#4-reference-corpora--payloads-wordlists-technique-catalogs)
+- [5. Where your break-in sits in the kill chain](#5-where-your-break-in-sits-in-the-kill-chain-think-like-the-full-attacker)
 
 ______________________________________________________________________
 
@@ -187,3 +188,33 @@ case: as a *local privilege-escalation enumerator on the disposable target*, its
 checklist can inform an in-container escalation after a proven RCE
 (`live_exploitation.md` §4) — consult its checks, but keep the host-canary,
 non-destructive proof discipline; never run it against a host you did not stand up.
+
+______________________________________________________________________
+
+## 5. Where your break-in sits in the kill chain (think like the full attacker)
+
+Think like the whole adversary, act only within your charter. Your proven web/API
+break-in is **Initial Access** (ATT&CK TA0001); your escalation on the disposable
+target is **Execution** (TA0002) and local **Privilege Escalation** (TA0004,
+including container-escape, `live_exploitation.md` §4). That is the slice you
+*perform* — a local, non-destructive, single-app engagement.
+
+Everything a real adversary would do **next** — Persistence, Credential Access,
+Lateral Movement, C2, Defense Evasion, Exfiltration, Impact — you **report as
+`impact`, you do not perform.** Naming what an attacker would do from this foothold
+sharpens the finding's severity and gives the blue team its detection targets
+(`ray-warden` `analyst_playbooks.md` §11), which is the whole point of the
+red/blue asymmetry: you think through the full chain, you execute only the local
+links. Concretely, in a finding's `impact`:
+
+- "This RCE is Initial Access; from here an adversary would establish **persistence**
+  (a cron/service), harvest **credentials** from the app's config/env, and move
+  **laterally** to the DB host." — *reported*, from static reasoning, not carried out.
+- Never plant a real backdoor, never dump real credentials, never pivot to another
+  host, never build a C2 channel or anti-forensics. Those are off-charter by
+  construction (`siege_protocol.md` §1.2) and belong to a different, human-gated
+  engagement model that `ray-siege` is not (`docs/coverage-map.md`).
+
+The asymmetry, stated for you: **red performs the local slice and reasons about the
+rest; blue detects the rest.** Reasoning about the full chain is in charter —
+executing past Initial Access + local escalation is not.

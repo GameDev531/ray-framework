@@ -18,6 +18,7 @@ of that class arrives; read §1 and §7 every run.
 - [8. Proactive Threat Hunting (hypothesis-driven)](#8-proactive-threat-hunting-hypothesis-driven)
 - [9. Frameworks & Evidence Discipline](#9-frameworks--evidence-discipline)
 - [10. Detection & DFIR reference tooling](#10-detection--dfir-reference-tooling)
+- [11. The attacker kill chain as detection targets](#11-the-attacker-kill-chain-as-detection-targets)
 
 ______________________________________________________________________
 
@@ -334,3 +335,63 @@ blocking rule, running an Atomic test on a live system — is a **recommendation
 you tag with its tier for the orchestrator's gate (`autonomy_tiers.md`), never an
 action you take yourself. A portable Sigma/YARA rule is the ideal hunt output
 precisely because writing it changes nothing.
+
+______________________________________________________________________
+
+## 11. The attacker kill chain as detection targets
+
+The per-class playbooks (§2–§6) are entry points; a real intrusion is a **chain**
+of ATT&CK tactics, and your job is to detect it at *any* link, then reconstruct the
+whole. The red `ray-reaver` only performs the first links against a disposable app
+(Initial Access + local escalation — `docs/coverage-map.md`); **you must detect all
+of them**, because a real adversary does not stop there. That asymmetry is why this
+table is here: it is the detection knowledge the attacker side never needs.
+(Compiled with the Apache-2.0 corpora in `CREDITS.md`.)
+
+| Tactic (ATT&CK) | What you hunt for | Signal sources |
+|---|---|---|
+| Initial Access (TA0001) | Exploit of a public app, valid-account login from a new ASN/device, malicious attachment/link followed | WAF/app logs, auth logs, email gateway |
+| Execution (TA0002) | Script interpreters spawned by unusual parents (Office→PowerShell), `wscript`/`mshta`, unexpected `cmd`/`bash -c` | Sysmon 1, EDR process tree |
+| Persistence (TA0003) | New service/scheduled task/cron/systemd unit, run-key/registry autoruns, WMI event subs, new SSH key or authorized_keys edit, an added OAuth app / mail-forwarding rule | Sysmon 12/13, autoruns, cloud audit |
+| Privilege Escalation (TA0004) | Token manipulation, sudo/setuid abuse, UAC bypass, a service running as a higher principal | EDR, `/var/log/auth`, Sysmon |
+| Defense Evasion (TA0005) | Log clearing (Security 1102), AMSI/ETW patching, timestomping, disabling the agent, **living-off-the-land** binaries (below) | EDR tamper alerts, Sysmon 1102 |
+| Credential Access (TA0006) | LSASS access/dump, `/etc/shadow` reads, Kerberoast/AS-REP requests, cloud-key theft, browser-credential store reads | Sysmon 10, EDR, DC logs |
+| Discovery (TA0007) | Bursts of `whoami`/`net`/` nltest`/AD enumeration, internal port scans, cloud-metadata (169.254.169.254) hits | Process logs, netflow |
+| Lateral Movement (TA0008) | SMB/WinRM/SSH/RDP from a non-admin host, PsExec/WMI exec, pass-the-hash/ticket, unusual service-account interactive logons | Auth logs (4624/4648 type 3/10), netflow |
+| Collection / Exfiltration (TA0009/0010) | Staging archives, large or off-hours egress, DNS-tunneling entropy, uploads to a new external host | DLP, netflow, DNS logs (§5) |
+| Command & Control (TA0011) | Beaconing (fixed cadence + jitter), rare-domain/JA3 fingerprints, long-lived encrypted sessions to a new ASN | Zeek/Suricata, proxy, netflow |
+| Impact (TA0040) | Mass file rename/encrypt (ransomware), account lockouts, deletion bursts, resource hijack (cryptomining CPU) | EDR, storage/audit logs |
+
+**Living-off-the-land (the defense-evasion detail that matters most).** Modern
+intrusions avoid custom malware and abuse **trusted, signed, already-present
+binaries**, so a signature-only view misses them. Two reference catalogs are the
+analyst's map:
+
+- **LOLBAS** (lolbas-project.github.io) — Windows Living-Off-the-Land Binaries And
+  Scripts: `certutil` downloading a file, `regsvr32`/`mshta`/`rundll32` executing
+  remote code, `bitsadmin` transfers. Hunt the *binary + anomalous argument/parent*,
+  not the binary's presence.
+- **GTFOBins** (gtfobins.github.io) — the Unix equivalent: `find -exec`, `tar
+  --checkpoint-action`, `vim`/`awk`/`env` shelling out, a setuid binary breaking to
+  a root shell. On a Linux estate this is your privilege-escalation and
+  execution-detection reference.
+
+The tell is always *context*: `certutil` exists on every Windows host; `certutil
+-urlcache -f http://…` writing an executable is the finding. Express the confirmed
+pattern as a Sigma rule (§10).
+
+**The response side — the IR lifecycle (PICERL).** When a chain is confirmed and
+the case moves from detect to respond, frame it with the standard lifecycle so
+nothing is skipped — and remember every *acting* step is gated (`autonomy_tiers.md`):
+
+1. **Prepare** — the telemetry, playbooks, and access that had to exist beforehand
+   (a gap here becomes a lesson).
+2. **Identify** — scope the intrusion across the §11 chain: every host, account,
+   and tactic, not just the alerting link.
+3. **Contain** — isolate/disable/block (reversible T2 where possible) to stop
+   spread — a **recommendation** you tag with its tier, never a unilateral act.
+4. **Eradicate** — remove persistence and footholds (the whole chain, not the one
+   IoC — containment is not eradication, §9).
+5. **Recover** — restore from known-good, monitor for reinfection.
+6. **Lessons learned** — the new detection (Sigma/YARA) and the visibility gap;
+   promote both to memory (§7 feedback loop).

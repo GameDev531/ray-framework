@@ -58,6 +58,15 @@ BloodHound, CrackMapExec, Responder, Evilginx2, Mimikatz, WinPEAS, Caldera) are
 deliberately **not** integrated — they fall outside Ray's local-only,
 non-destructive charter; the dockets say so and why.
 
+Additional subject-index corpora used as a **gap map** to size the agents'
+coverage (referenced, not copied):
+
+- paulveillard/cybersecurity, yeyintminthuhtut/Awesome-Red-Teaming,
+  A-poc/BlueTeam-Tools — mapped in `docs/coverage-map.md` (per-agent
+  covered / in-charter-gap / off-charter status).
+- LOLBAS (lolbas-project.github.io) and GTFOBins (gtfobins.github.io) —
+  living-off-the-land detection references in `ray-warden` §11.
+
 ## Apache-2.0 attribution (continued)
 
 Per the Apache-2.0 terms, the upstream copyright notices and license are
