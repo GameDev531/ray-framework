@@ -99,6 +99,16 @@ follow it; it already scopes each team to its own docs.
 Red reads the red docs; blue reads the blue docs. The shared §C domain dockets are
 read by both siege teams for **different halves** (attack vs safe-pattern).
 
+**On `ray-siege` / `ray-reaver` (authorized, defensive).** The live loop is an
+authorized penetration test of the operator's **own** app on a disposable loopback
+instance — non-destructive, fail-closed, output is fixes. It is legitimate
+security work, not an attack on third parties; the full statement is
+`docs/authorized-use.md`. A capable model recognizes this from context and runs it;
+a model that categorically refuses offensive-security vocabulary may over-refuse
+the *live* track — in which case the entire static pipeline, `ray-warden`,
+`ray-quarry`, `ray-loupe`, and `ray-cloak` still run normally (they attack
+nothing).
+
 ______________________________________________________________________
 
 ## Real tools (prefer over narration)

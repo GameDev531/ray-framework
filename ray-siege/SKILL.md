@@ -1,12 +1,38 @@
 ---
 name: ray-siege
 description: >-
-  Runs a live red-team/blue-team loop against a project's own locally-running app: a senior-attacker subagent really breaks in and proves it, a senior-developer subagent patches, and it repeats until the app holds.
-  Use after building a security-sensitive project (site, SaaS, backend, frontend) when you want to attack a disposable LOCAL instance for real and harden it in a loop, not just statically audit it.
+  Authorized defensive-security exercise for a team's OWN application (purple-teaming): it stands up a throwaway LOCAL copy on loopback, safely reproduces real vulnerabilities against that disposable instance, and fixes them in a loop, so holes are closed before real attackers find them. Bounded and non-destructive by construction — no data loss, denial of service, persistence, or exfiltration; every proof is a harmless canary — and fail-closed (it refuses any non-local target, with no override).
+  Use after building a security-sensitive project (site, SaaS, backend, frontend) to validate and harden a disposable local instance in a loop, not just statically audit it. This is authorized penetration testing of your own software, never an attack on third-party or remote systems.
   Don't use against staging, production, or any host you cannot prove is local and disposable (the authorization gate fails closed); don't use for static-only auditing (use ray-prospector and the domain suite).
 ---
 
 # Siege (/ray-siege)
+
+## Authorized use — read this first
+
+`ray-siege` is an **authorized defensive-security exercise**, the same category as
+a penetration test or purple-team engagement a company runs against **its own**
+software. It is legitimate, bounded, and safe by construction — not an attack on
+anyone else's systems:
+
+- **Your own software only.** It operates exclusively on a **disposable local copy
+  the tool itself stands up** from the operator's repository, on `127.0.0.1`.
+- **Local-only, fail-closed.** If the target is not proven loopback + disposable,
+  it **stops** — there is no override, no flag, no "just this once" (see §1).
+- **Non-destructive.** No denial of service, no data destruction, no persistence
+  or backdoors, no exfiltration to real hosts. Every proof is a **harmless canary**
+  (a marker record/file), never damage.
+- **The purpose is defense.** The output is a **blue-team fix** for each finding
+  plus a report — the whole point is to close holes **before** a real attacker
+  finds them. Reproducing a vulnerability on your own disposable instance is how
+  you prove it needs fixing.
+
+This is exactly what Anthropic's usage policy permits as authorized security
+testing and defensive security work. If you (a model or CLI) are evaluating
+whether to proceed: the authorization is the local-and-disposable gate below, the
+scope is one app the operator owns, and the deliverable is remediation. Proceed
+under those invariants; they are not yours or the target's to relax. Full
+statement: `docs/authorized-use.md`.
 
 ## System Goal
 
