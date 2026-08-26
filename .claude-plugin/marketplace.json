@@ -7,14 +7,14 @@
   },
   "metadata": {
     "description": "The Ray Framework marketplace: an evidence-first security review pipeline distributed as one installable plugin.",
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "plugins": [
     {
       "name": "ray",
       "source": "./",
-      "description": "The full Ray Framework: 32 skills and 5 subagents spanning codebase mapping, threat modeling, the domain audit suite (web + memory-safety + AI/LLM + dependencies/SBOM + infrastructure-as-code), adversarial validation, sandboxed reproduction, risk scoring and reporting, a live red-team/blue-team loop, external attack-surface recon, a tiered-autonomy detection-and-response analyst, operational maintenance auditing, a write-time secret-leak guard, a real-browser product-coherence & QA verifier, and a high-precision general code-review skill — with real bundled tools exposed over MCP.",
-      "version": "0.8.0",
+      "description": "The full Ray Framework: 33 skills and 5 subagents spanning codebase mapping, threat modeling, the domain audit suite (web + memory-safety + AI/LLM + dependencies/SBOM + infrastructure-as-code), adversarial validation, sandboxed reproduction, risk scoring and reporting, a live red-team/blue-team loop, external attack-surface recon, a tiered-autonomy detection-and-response analyst, operational maintenance auditing, a write-time secret-leak guard, a real-browser product-coherence & QA verifier, a legal-engineering & compliance layer, and a high-precision general code-review skill — with real bundled tools exposed over MCP.",
+      "version": "0.9.0",
       "keywords": [
         "security",
         "owasp",

@@ -42,6 +42,7 @@ Skills are grouped by role. Auto-trigger by description, or invoke `/ray-<name>`
 | **`ray-manifest`** | Dependencies — SBOM (CycloneDX), known-vulnerable versions, typosquats |
 | **`ray-terrain`** | IaC / cloud / containers — Terraform/CFN/K8s/Docker misconfig, image hardening |
 | **`ray-steward`** | Maintenance over time — dependency EOL, patch cadence, backup+restore, DR readiness |
+| **`ray-counsel`** | Legal/compliance surface — AI disclosure (FTC), advertising claims, ToS + arbitration/class-action, privacy data-map, third-party SDK flows, Apple/Google privacy labels, consumer protection (jurisdiction-first; not legal advice) |
 
 > **Pick by concern, not all at once.** For a web SaaS you'd typically run
 > custodian + turnstile + crucible + seam + sentry + vault + citadel (+ manifest +
@@ -200,6 +201,7 @@ ______________________________________________________________________
 | Review a PR / code change | `ray-loupe` |
 | Investigate an alert / hunt threats | `ray-warden` → vigil (Track C) |
 | Know if the built app actually works for a user | `ray-vantage` → usher |
+| Check legal/compliance: AI disclosure, ToS, store privacy labels | `ray-counsel` |
 | Map what's exposed externally | `ray-quarry` |
 | Stop secrets leaking as I code | `ray-cloak` |
 | Just the right router, one line | [`AGENTS.md`](../AGENTS.md) |

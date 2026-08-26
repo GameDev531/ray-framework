@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "ray",
   "displayName": "Ray Framework",
-  "version": "0.8.0",
-  "description": "An agentic, evidence-first security review pipeline: 32 composable skills that map a codebase, build a threat model, audit it across security domains (web, memory-safety, AI/LLM, dependencies/SBOM, and infrastructure-as-code), validate, reproduce, and score every finding — plus a live red-team/blue-team loop (ray-siege), external attack-surface recon (ray-quarry), a tiered-autonomy detection-and-response analyst (ray-warden), operational maintenance auditing (ray-steward), a write-time secret-leak guard (ray-cloak), a real-browser product-coherence & QA verifier (ray-vantage), and a high-precision general code-review skill (ray-loupe) — with agents that keep curated cross-run memory and real bundled tools exposed over MCP.",
+  "version": "0.9.0",
+  "description": "An agentic, evidence-first security review pipeline: 33 composable skills that map a codebase, build a threat model, audit it across security domains (web, memory-safety, AI/LLM, dependencies/SBOM, and infrastructure-as-code), validate, reproduce, and score every finding — plus a live red-team/blue-team loop (ray-siege), external attack-surface recon (ray-quarry), a tiered-autonomy detection-and-response analyst (ray-warden), operational maintenance auditing (ray-steward), a write-time secret-leak guard (ray-cloak), a real-browser product-coherence & QA verifier (ray-vantage), a legal-engineering & compliance layer (ray-counsel: AI transparency, ToS/arbitration, and Apple/Google privacy labels), and a high-precision general code-review skill (ray-loupe) — with agents that keep curated cross-run memory and real bundled tools exposed over MCP.",
   "author": {
     "name": "GameDev531",
     "url": "https://github.com/GameDev531"
@@ -31,6 +31,12 @@
     "qa",
     "browser-testing",
     "e2e",
+    "compliance",
+    "legal",
+    "ftc",
+    "ccpa",
+    "consumer-protection",
+    "app-store-privacy",
     "code-review",
     "memory-safety",
     "llm-security",
@@ -79,7 +85,8 @@
     "./ray-terrain",
     "./ray-steward",
     "./ray-cloak",
-    "./ray-vantage"
+    "./ray-vantage",
+    "./ray-counsel"
   ],
   "mcpServers": {
     "ray-tools": {

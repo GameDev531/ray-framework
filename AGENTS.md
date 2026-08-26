@@ -65,6 +65,7 @@ degrade gracefully if an upstream one is absent.
 | Dependencies — SBOM (CycloneDX), known-vulnerable versions, typosquats | `ray-manifest` | (drives `scripts/ray_sbom.py`) |
 | IaC / cloud / **containers** — Terraform/CFN/K8s/Docker misconfig, image hardening | `ray-terrain` | `iac_docket.md` (drives `scripts/ray_iac.py`) |
 | Maintenance over time — dependency EOL, patch cadence, backup+restore, DR | `ray-steward` | `maintenance_docket.md` |
+| Legal/compliance surface — AI disclosure (FTC), ToS & arbitration, Apple/Google privacy labels, consumer protection, claims (jurisdiction-first; not legal advice) | `ray-counsel` | `compliance_docket.md` |
 
 ### D. Beyond static review
 
