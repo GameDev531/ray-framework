@@ -68,6 +68,7 @@ Skills are grouped by role. Auto-trigger by description, or invoke `/ray-<name>`
 | **`ray-quarry`** | You need **external** attack-surface recon (OSINT/DNS/cert transparency) on assets you own/are authorized to assess |
 | **`ray-warden`** | You need **detection & response** on a running estate — alert triage, hunting, IR (dispatches `ray-vigil`) |
 | **`ray-loupe`** | You want a **general code review** of a change (dispatches `ray-scrivener`, delegates deep security to the suite) |
+| **`ray-vantage`** | You need to know the built app **actually works for a user** — front-to-back coherence (missing/dead buttons), real-browser QA, and re-verifying fixes hold in the UI (dispatches `ray-usher`) |
 | **`ray-cloak`** | You're writing/editing files and must **not leak secrets** — a write-time guard + `ray_secret_scan` sweep |
 | **`ray-foundry`** | You want to build your own deterministic orchestrator harness |
 
@@ -84,6 +85,7 @@ its own isolated context, curated memory, and a **reading flow** in `agents/<nam
 | **`ray-bulwark`** | 🔵 Blue (fix) | `ray-siege` | A proven break-in needs a **minimal, idiomatic code fix** committed | The *fix* side: the finding → `bulwark_arsenal.md` (+ CI gates) → the safe-pattern half of the domain docket → Ray-owned fixes |
 | **`ray-vigil`** | 🔵 Blue (detection) | `ray-warden` | An alert/case needs **investigation → scored verdict → tier-appropriate recommendation** (read-only) | The *analyst* docs: `autonomy_tiers.md` → `analyst_playbooks.md` (triage/class/hunt/frameworks/kill-chain) → warden `findings_contract.md` |
 | **`ray-scrivener`** | ⚪ Review | `ray-loupe` | A code change needs a **high-precision review** with security delegated to the suite | The change + the relevant domain dockets |
+| **`ray-usher`** | 🟢 QA | `ray-vantage` | The app must be **proven to work for a user** — drive a real browser, close wiring gaps, confirm fixes hold | `browser_ops.md` → `coherence_and_qa.md` → the domain docket (for security-hold semantics) |
 
 **The red/blue asymmetry (by design):** the reaver *performs* only the local slice
 (Initial Access + local escalation) and *reports* the rest of the kill chain as
@@ -197,6 +199,7 @@ ______________________________________________________________________
 | Check one domain only (e.g. auth) | that domain skill (e.g. `ray-turnstile`) |
 | Review a PR / code change | `ray-loupe` |
 | Investigate an alert / hunt threats | `ray-warden` → vigil (Track C) |
+| Know if the built app actually works for a user | `ray-vantage` → usher |
 | Map what's exposed externally | `ray-quarry` |
 | Stop secrets leaking as I code | `ray-cloak` |
 | Just the right router, one line | [`AGENTS.md`](../AGENTS.md) |

@@ -66,6 +66,11 @@ coverage (referenced, not copied):
   covered / in-charter-gap / off-charter status).
 - LOLBAS (lolbas-project.github.io) and GTFOBins (gtfobins.github.io) —
   living-off-the-land detection references in `ray-warden` §11.
+- web-quality-skills (the QA methodology, rubric, and field-tested browser
+  gotchas), agent-browser, and browser-use / browser-harness — adapted into
+  `ray-vantage`'s `browser_ops.md` and `coherence_and_qa.md` (the real-browser
+  driving method, the 1–5 QA rubric, and the output format). Referenced/adapted,
+  not copied; each project keeps its own license.
 - eudk/awesome-cybersecurity-tools — used as a tool index to source the
   missing in-charter tools: `dalfox` (XSS) and `tplmap` (SSTI) added to the
   runnable arsenal (`scripts/ray_arsenal.py`, `reaver_arsenal.md` §2), plus

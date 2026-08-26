@@ -74,6 +74,7 @@ degrade gracefully if an upstream one is absent.
 | **External attack-surface recon** (OSINT, DNS, cert transparency), authorized | `ray-quarry` |
 | **Detection & response** on a running estate (alert triage, hunting, IR) | `ray-warden` → agent `ray-vigil`. See §Agents. |
 | **General code review** of a change (correctness + security delegation) | `ray-loupe` → agent `ray-scrivener` |
+| **Does the built app actually WORK for a user?** front-to-back coherence, missing/dead buttons, real-browser QA, re-verify fixes hold in the UI | `ray-vantage` → agent `ray-usher` |
 | **Stop secrets leaking into files/commits** (write-time guard) | `ray-cloak` |
 | Build a custom deterministic orchestrator harness | `ray-foundry` |
 
@@ -95,6 +96,9 @@ follow it; it already scopes each team to its own docs.
   → warden `findings_contract.md`.
 - **`ray-scrivener`** (code review) — dispatched by `ray-loupe`; delegates deep
   security to the §C skills.
+- **`ray-usher`** (real-user QA) — dispatched by `ray-vantage`; drives a real
+  browser to prove the app works end-to-end, closes front-to-back wiring gaps, and
+  re-verifies fixes hold from the user's seat.
 
 Red reads the red docs; blue reads the blue docs. The shared §C domain dockets are
 read by both siege teams for **different halves** (attack vs safe-pattern).
