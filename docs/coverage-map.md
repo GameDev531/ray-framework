@@ -1,7 +1,8 @@
-# Agent Coverage Map — the two opponents, and the charter boundary
+# Agent Coverage Map — the opponents, the referee, and the charter boundary
 
-Ray's red and blue agents are **asymmetric opponents**, and that asymmetry is a
-design decision, not a limitation:
+Ray's agents fall into three roles: two **asymmetric opponents** (red and blue) and
+a **referee** (green) that checks the product actually works and that the fixes
+held. The red/blue asymmetry is a design decision, not a limitation:
 
 - **Red (`ray-reaver`) — think like the attacker, *within the local slice*.** It
   breaks into the disposable local app for real, proving each entry with a canary.
@@ -14,9 +15,18 @@ design decision, not a limitation:
   full kill chain — persistence, lateral movement, C2, defense evasion — as
   **detection targets**, even for tactics the red reaver never performs.
 
+- **Green (`ray-vantage`/`ray-usher`) — the referee at the user's seat.** It neither
+  attacks nor detects: it drives the running app in a real browser like a person,
+  proving the product actually works end-to-end (front-to-back coherence — a
+  backend feature with no button is as real a failure as a vulnerability), and
+  **re-verifying that the blue team's fixes hold when the app is operated by hand**.
+  It closes UI wiring gaps; it reports, but never patches, a security regression.
+
 > Red teaches you to think like the attacker. Blue teaches you to detect,
-> investigate, and respond to the attacker. Ray's red performs the local slice;
-> Ray's blue detects the entire chain.
+> investigate, and respond to the attacker. Green checks that, after all of it, the
+> product still works for a real user and the fixes actually hold. Ray's red
+> performs the local slice; Ray's blue detects the entire chain; Ray's green sits in
+> the user's chair.
 
 This file maps the three community subject-indexes the maintainers reviewed
 (paulveillard/cybersecurity, yeyintminthuhtut/Awesome-Red-Teaming, A-poc/
@@ -83,3 +93,36 @@ every irreversible step — Ray does not pretend to be that, and the reaver will
 drift into it. The blue side, by contrast, is expected to **understand and detect
 all of it**, because detection has no such blast radius. That is the asymmetry, and
 it is deliberate.
+
+______________________________________________________________________
+
+## Green — the referee at the user's seat (`ray-vantage` / `ray-usher`)
+
+A third role, outside the attack/defend duel: **does the thing actually work for a
+person, and did the fixes survive contact with a real browser?** This is the gap
+neither opponent covers — the red team proves a hole exists, the blue team writes a
+fix, but neither one sits in the user's chair and *operates the product*. An app can
+be provably secure and still be broken (a `/scan` endpoint the UI never exposes),
+or a fix can look right in the diff and fail in the browser.
+
+| Concern | Ray status |
+|---|---|
+| **Front-to-back coherence** — every backend capability reachable through the UI; no dead buttons; results actually render | `ray-vantage` builds the capability↔affordance matrix and drives a real browser to confirm each; gaps are fixed as minimal frontend wiring (`ray-usher`). ✅ |
+| **End-to-end "it works"** — core user flows complete, with console/network failures caught (not just what a screenshot shows) | `ray-usher` drives the pre-installed Chromium, scores 1–5 with evidence. ✅ |
+| **Fixes hold from the user's seat** — the IDOR really 403s, the stored XSS really renders inert, when driven by hand | `ray-vantage` re-verifies siege/domain findings through the running UI (report-only; a regression routes back to `ray-siege`/`ray-bulwark`). ✅ |
+| **Accessibility / performance / SEO quality** | ⛔ Out of scope — dedicated tools own these; green is about *works* and *fixes-held*, not broader web-quality. |
+
+**Where green sits in the flow.** It runs **after** a build and **after** the blue
+team has patched — it is the "walk the floor before opening" pass. Its charter
+mirrors the others' discipline: evidence-first (no on-screen proof, no verdict),
+own-software-only, and it **fixes only its own domain** (UI wiring), reporting
+security regressions rather than patching them — the same read/act separation that
+keeps `ray-vigil` from pulling the switch it recommends.
+
+**The three-role summary.**
+
+| Role | Agent(s) | Performs | Never |
+|---|---|---|---|
+| 🔴 Red | `ray-reaver` | Initial Access + local escalation on the disposable app | The rest of the kill chain (reports it as impact) |
+| 🔵 Blue | `ray-bulwark`, `ray-vigil` | Fix the code; detect & investigate the whole chain | Attack; act on an irreversible step without the gate |
+| 🟢 Green | `ray-usher` | Operate the app as a user; close UI wiring gaps; confirm fixes hold | Attack, detect, or patch security; invent backend features |
