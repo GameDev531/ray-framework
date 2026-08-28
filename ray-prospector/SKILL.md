@@ -38,6 +38,9 @@ interface violations.
 ## Input/Output Contract
 
 - **Reads**:
+  - `references/attack-classes.md` and `references/hunting-doctrine.md` (this
+    skill's own catalog of what to hunt, how to hunt it, and the bar every
+    finding clears before it is written). Consult them BEFORE auditing.
   - `workspace/plan.json` (falls back to codebase sweep if missing/empty).
   - `workspace/.ray_state.json` (to track current loop pass).
   - referenced Markdown files in `"kb_references"` (e.g.
@@ -119,6 +122,17 @@ Skill-specific notes for the researcher:
 
 Perform a thorough memory-safety, logical-correctness, and robustness review of
 the targeted codebase.
+
+**Hunt with method, not vibes.** Before auditing, read `references/attack-classes.md`
+(the class catalog + which domain skill owns each) and `references/hunting-doctrine.md`
+(the twelve hunting angles and the six-point bar every finding must clear). As the
+generalist floor you audit EVERY targeted file for business logic, state-machine,
+race, and chained-attack flaws that no domain skill owns — and you never skip a
+file because "a domain skill will catch it". When a file clearly belongs to a
+domain another skill owns (auth, native memory, LLM, IaC…), still do a first-pass
+sweep and let the plan's domain investigations go deep. Every finding you write
+clears the doctrine's bar (concrete attack, real impact, attacker-controlled
+source, no earlier layer already blocking it).
 
 Execute the research stage as follows:
 
