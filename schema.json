@@ -190,14 +190,16 @@
         "calibration_checklist": { "$ref": "#/$defs/calibration_checklist" },
         "outrage_commentary": { "type": "string" },
         "executive_summary": { "type": "string" },
+        "is_chain": { "type": "boolean", "description": "true for a ray-cascade exploit-chain super-finding." },
+        "chain_links": { "type": "array", "items": { "type": "string" }, "description": "Ordered member finding ids of a chain (ray-cascade)." },
         "history": { "type": "array", "items": { "$ref": "#/$defs/history_entry" }, "minItems": 1 }
       },
 
       "allOf": [
         {
-          "$comment": "VALID-status consistency: a VALID non-chain finding's triage_checklist must carry no UNKNOWN and no FAIL / passes:false.",
+          "$comment": "VALID-status consistency: a VALID non-chain finding's triage_checklist must carry no UNKNOWN and no FAIL / passes:false. Chain super-findings (is_chain) are exempt.",
           "if": {
-            "properties": { "status": { "const": "VALID" } },
+            "properties": { "status": { "const": "VALID" }, "is_chain": { "not": { "const": true } } },
             "required": ["status", "triage_checklist"]
           },
           "then": {
