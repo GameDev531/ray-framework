@@ -1,0 +1,8 @@
+# Python build artifacts (the bundled helpers are stdlib-only source)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Local siege/run state (never part of the repo — see siege_protocol §2)
+workspace/
