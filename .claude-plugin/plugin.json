@@ -2,8 +2,8 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "ray",
   "displayName": "Ray Framework",
-  "version": "0.9.0",
-  "description": "An agentic, evidence-first security review pipeline: 33 composable skills that map a codebase, build a threat model, audit it across security domains (web, memory-safety, AI/LLM, dependencies/SBOM, and infrastructure-as-code), validate, reproduce, and score every finding — plus a live red-team/blue-team loop (ray-siege), external attack-surface recon (ray-quarry), a tiered-autonomy detection-and-response analyst (ray-warden), operational maintenance auditing (ray-steward), a write-time secret-leak guard (ray-cloak), a real-browser product-coherence & QA verifier (ray-vantage), a legal-engineering & compliance layer (ray-counsel: AI transparency, ToS/arbitration, and Apple/Google privacy labels), and a high-precision general code-review skill (ray-loupe) — with agents that keep curated cross-run memory and real bundled tools exposed over MCP.",
+  "version": "0.10.0",
+  "description": "An agentic, evidence-first security review pipeline: 37 composable skills that map a codebase, build a threat model, audit it across security domains (web, memory-safety, AI/LLM, dependencies/SBOM, and infrastructure-as-code), validate, reproduce, and score every finding — plus a live red-team/blue-team loop (ray-siege), external attack-surface recon (ray-quarry), a tiered-autonomy detection-and-response analyst (ray-warden), operational maintenance auditing (ray-steward), a write-time secret-leak guard (ray-cloak), a real-browser product-coherence & QA verifier (ray-vantage), a legal-engineering & compliance layer (ray-counsel: AI transparency, ToS/arbitration, and Apple/Google privacy labels), and a high-precision general code-review skill (ray-loupe) — with agents that keep curated cross-run memory and real bundled tools exposed over MCP. Runs end-to-end through the ray-conductor orchestrator against an immutable, content-hashed snapshot, with every finding validated against a single JSON schema (schema.json) and a static-track patcher (ray-anvil) that only marks a fix VERIFIED_SECURE after a >=3-variant re-attack.",
   "author": {
     "name": "GameDev531",
     "url": "https://github.com/GameDev531"
@@ -86,13 +86,19 @@
     "./ray-steward",
     "./ray-cloak",
     "./ray-vantage",
-    "./ray-counsel"
+    "./ray-counsel",
+    "./ray-conductor",
+    "./ray-anvil",
+    "./ray-ledger",
+    "./ray-cascade"
   ],
   "mcpServers": {
     "ray-tools": {
       "type": "stdio",
       "command": "python3",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/scripts/ray_mcp_server.py"]
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/scripts/ray_mcp_server.py"
+      ]
     }
   }
 }

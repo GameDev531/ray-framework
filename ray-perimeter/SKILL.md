@@ -30,6 +30,11 @@ architecture defined in the Knowledge Base (KB).
     `UNPINNED`.
   - `--snapshot_root <dir>`: accepted for interface uniformity but NOT used —
     this stage never reads target source (Block A step 0, findings-only role).
+  - `--profile <name>`: an optional target profile (`web-app`, `native`,
+    `library`, `llm-app`; see `profiles/*.md`). When set, copy that profile's
+    `Review Overrides` and `Calibration Overrides` blocks verbatim into the
+    threat model (see step 3) so `ray-arbiter` and `ray-gauge` treat the target
+    as its type demands.
 
 ## Input/Output Contract
 
@@ -233,6 +238,16 @@ Execute the threat modeling process as follows:
      - `STANDARD`: Important operations; short downtime is tolerable.
      - `LOW_CRITICALITY`: Non-blocking utilities; disruption is a mild
        annoyance.
+
+   - **Profile Overrides (only when `--profile` is set):** Copy the named
+     profile's `Review Overrides` and `Calibration Overrides` blocks
+     (`profiles/<name>.md`) VERBATIM into `THREAT_MODEL.md` as their own sections.
+     `ray-arbiter` reads `Review Overrides` (which auto-dismissal rules to
+     suspend for this target type — e.g. a `web-app` profile keeps CORS,
+     rate-limit, and cookie-flag findings in scope instead of dropping them as
+     hygiene), and `ray-gauge` reads `Calibration Overrides` (which severity caps
+     to lift — e.g. not force-LOWing a dependency CVE whose reachability is
+     unproven). Absent `--profile`, write neither block (domain-agnostic default).
 
 Stamp and save the model:
 
