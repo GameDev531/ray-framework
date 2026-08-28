@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/GameDev531/ray-framework/schema.json",
+  "title": "Ray Framework — Finding & State Contract",
+  "description": "Single source of truth for the JSON contracts every Ray skill reads and writes: the per-finding object, its triage/calibration checklists, the status/checklist consistency gates, the VERIFIED_SECURE re-attack gate, and the normalized execution-log entry consumed by ray-retrospective. Skills reference this file by name; a harness MAY validate finding files against it between stages.",
+
+  "$defs": {
+    "iso8601": {
+      "type": "string",
+      "description": "An ISO-8601 timestamp, e.g. 2026-08-28T15:13:00Z."
+    },
+
+    "severity": { "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFORMATIONAL"] },
+    "priority": { "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"] },
+    "privileges_required": { "enum": ["NONE", "LOW", "HIGH"] },
+    "attacker_position": {
+      "enum": [
+        "EXTERNAL", "INTERNAL_NETWORK", "IN_CLUSTER", "LOCAL",
+        "HOST_SYSTEM", "SUPPLY_CHAIN", "PHYSICAL_TEMPORARY", "PHYSICAL_LONG_TERM"
+      ]
+    },
+    "user_interaction": { "enum": ["NONE", "REQUIRED"] },
+    "status": {
+      "enum": ["PROVISIONALLY_VALID", "VALID", "FALSE_POSITIVE", "NEEDS_RESEARCH", "DUPLICATE"]
+    },
+    "production_viability": {
+      "enum": ["VIABLE", "NON_VIABLE", "SAMPLE_OR_TEST", "CONDITIONAL_VIABLE"]
+    },
+    "repro_status": {
+      "enum": ["reproduced", "statically_confirmed", "not_attempted", "failed_to_reproduce"]
+    },
+    "reattack_status": {
+      "enum": ["bypassed_patch", "failed_to_bypass", "inconclusive_baseline_changed"]
+    },
+    "patch_status": {
+      "enum": [
+        "NOT_ATTEMPTED", "MITIGATION_PROPOSED", "VERIFIED_SECURE",
+        "VERIFICATION_FAILED", "VERIFICATION_INCOMPLETE", "ERROR"
+      ]
+    },
+    "availability_tier": { "enum": ["CRITICAL", "STANDARD", "LOW_CRITICALITY", null] },
+    "inferred_exposure": { "enum": ["EXPOSED", "INTERNAL", "PRIVILEGED"] },
+
+    "checklist_entry": {
+      "type": "object",
+      "description": "One evaluated rule. `outcome` is preferred; the legacy `passes`/`fires` booleans remain permitted for backward compatibility. A `reason` is REQUIRED for FAIL/UNKNOWN/NOT_APPLICABLE (or passes:false / fires:true) and SHOULD be omitted for PASS/DOES_NOT_APPLY to save tokens.",
+      "properties": {
+        "outcome": { "enum": ["PASS", "FAIL", "UNKNOWN", "NOT_APPLICABLE", "APPLIES", "DOES_NOT_APPLY"] },
+        "passes": { "type": "boolean" },
+        "fires": { "type": "boolean" },
+        "reason": { "type": "string" }
+      },
+      "anyOf": [
+        { "required": ["outcome"] },
+        { "required": ["passes"] },
+        { "required": ["fires"] }
+      ],
+      "allOf": [
+        {
+          "if": { "properties": { "outcome": { "enum": ["FAIL", "UNKNOWN", "NOT_APPLICABLE", "APPLIES"] } }, "required": ["outcome"] },
+          "then": { "required": ["reason"] }
+        }
+      ]
+    },
+
+    "triage_checklist": {
+      "type": "object",
+      "description": "The 13 negative constraints ray-arbiter evaluates. Every key is required so a downstream consumer can trust the object shape.",
+      "additionalProperties": false,
+      "required": [
+        "ignore_hypothetical_misuse", "ignore_missing_hygiene", "require_strict_reproducibility",
+        "avoid_pedantic_linting", "no_security_flaw_stretching", "evaluate_questionable_file_paths",
+        "ignore_resource_exhaustion_dos", "intrinsic_security_flaws", "verify_mitigations_pragmatically",
+        "refine_code_paths_strictly", "ignore_simd_vector_padding", "ensure_source_code_coherence",
+        "verify_attacker_control_of_source"
+      ],
+      "properties": {
+        "ignore_hypothetical_misuse": { "$ref": "#/$defs/checklist_entry" },
+        "ignore_missing_hygiene": { "$ref": "#/$defs/checklist_entry" },
+        "require_strict_reproducibility": { "$ref": "#/$defs/checklist_entry" },
+        "avoid_pedantic_linting": { "$ref": "#/$defs/checklist_entry" },
+        "no_security_flaw_stretching": { "$ref": "#/$defs/checklist_entry" },
+        "evaluate_questionable_file_paths": { "$ref": "#/$defs/checklist_entry" },
+        "ignore_resource_exhaustion_dos": { "$ref": "#/$defs/checklist_entry" },
+        "intrinsic_security_flaws": { "$ref": "#/$defs/checklist_entry" },
+        "verify_mitigations_pragmatically": { "$ref": "#/$defs/checklist_entry" },
+        "refine_code_paths_strictly": { "$ref": "#/$defs/checklist_entry" },
+        "ignore_simd_vector_padding": { "$ref": "#/$defs/checklist_entry" },
+        "ensure_source_code_coherence": { "$ref": "#/$defs/checklist_entry" },
+        "verify_attacker_control_of_source": { "$ref": "#/$defs/checklist_entry" }
+      }
+    },
+
+    "calibration_checklist": {
+      "type": "object",
+      "description": "The 27 severity sanity caps ray-gauge evaluates (see ray-gauge/references/severity_docket.md). Every key required.",
+      "additionalProperties": false,
+      "required": [
+        "repro_failure", "unreachable_inputs", "third_party_reachability", "minor_config_hygiene",
+        "non_security_critical", "vague_code_paths", "unreliable_triggers", "prerequisite_shell",
+        "physical_long_term", "trusted_controller_zero_delta", "standard_host_attacks",
+        "static_confirmation", "strict_xss", "internal_nested", "probabilistic_llm",
+        "supply_chain_prerequisites", "non_default_config", "confidential_computing_host",
+        "trusted_controller_critical_bypass", "local_attack_vector", "self_contained_blast",
+        "rarely_exposed", "equivalent_primitives", "documented_insecure_config",
+        "physical_temporary", "high_privilege_external", "trusted_controller_standard_bypass"
+      ],
+      "patternProperties": { "^[a-z_]+$": { "$ref": "#/$defs/checklist_entry" } }
+    },
+
+    "history_entry": {
+      "type": "object",
+      "description": "One appended stage record. Extra keys (e.g. `snapshot`) are permitted — this object is intentionally open.",
+      "required": ["stage", "action", "pass_number", "timestamp"],
+      "properties": {
+        "stage": {
+          "enum": ["researcher", "dedupe", "reviewer", "critic", "reproduce", "reattack", "calibrate", "chainer", "patcher", "conductor"]
+        },
+        "action": { "type": "string" },
+        "details": { "type": "string" },
+        "pass_number": { "type": "integer", "minimum": 0 },
+        "snapshot": { "type": "string" },
+        "timestamp": { "$ref": "#/$defs/iso8601" }
+      }
+    },
+
+    "reattack_variant": {
+      "type": "object",
+      "description": "One boundary-mutated re-attack input. EXACTLY the two keys — no free-form extras.",
+      "additionalProperties": false,
+      "required": ["description", "triggered"],
+      "properties": {
+        "description": { "type": "string" },
+        "triggered": { "type": "boolean" }
+      }
+    },
+
+    "finding": {
+      "type": "object",
+      "description": "One security finding, appended to across the pipeline. Snapshot-identity fields (discovery_commit) are OMITTED — never empty-stringed — in MODE-OFF/degraded runs.",
+      "required": ["id", "title", "description", "severity", "code_paths", "status", "history"],
+      "properties": {
+        "id": { "type": "string", "description": "UUID; MUST match the filename." },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "impact": { "type": "string" },
+        "severity": { "$ref": "#/$defs/severity" },
+        "privileges_required": { "$ref": "#/$defs/privileges_required" },
+        "attacker_position": { "$ref": "#/$defs/attacker_position" },
+        "user_interaction": { "$ref": "#/$defs/user_interaction" },
+        "status": { "$ref": "#/$defs/status" },
+        "code_paths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "SNAPSHOT-RELATIVE `path:line` entries, or a stable locator (symbol/offset/URL) without a fabricated :line for non-source targets."
+        },
+        "discovery_commit": { "type": "string", "description": "SNAPSHOT_ID at creation. Set once; never recomputed. Omitted in degraded mode." },
+        "cwe": { "type": "string", "pattern": "^CWE-[0-9]+$" },
+        "owasp": { "type": "string", "description": "e.g. A01:2021, API1:2023, LLM01:2025 — set by domain skills that map to a catalog." },
+        "signature": { "type": "string", "description": "16 hex chars. Content-identity hash. Computed once." },
+        "lineage_id": { "type": "string", "description": "UUIDv4 or inherited from an archived ancestor with the same signature." },
+        "duplicate_of": { "type": "string" },
+        "possible_duplicate_of": { "type": "string" },
+        "mitigation": { "type": "string" },
+        "reasoning": { "type": "string" },
+        "repro_hints": { "type": "string" },
+        "triage_checklist": { "$ref": "#/$defs/triage_checklist" },
+        "production_viability": { "$ref": "#/$defs/production_viability" },
+        "critic_reasoning": { "type": "string" },
+        "repro_status": { "$ref": "#/$defs/repro_status" },
+        "repro_file_path": { "type": "string" },
+        "run_command": { "type": "string" },
+        "repro_output": { "type": "string" },
+        "repro_snapshot_id": { "type": "string" },
+        "reattack_status": { "$ref": "#/$defs/reattack_status" },
+        "reattack_file_path": { "type": "string" },
+        "reattack_run_command": { "type": "string" },
+        "reattack_output": { "type": "string" },
+        "reattack_snapshot_id": { "type": "string" },
+        "reattack_variants": { "type": "array", "items": { "$ref": "#/$defs/reattack_variant" } },
+        "patch_status": { "$ref": "#/$defs/patch_status" },
+        "patch_base_snapshot": { "type": "string" },
+        "impact_score": { "type": "number", "minimum": 1, "maximum": 5 },
+        "likelihood_score": { "type": "number", "minimum": 1, "maximum": 5 },
+        "availability_tier": { "$ref": "#/$defs/availability_tier" },
+        "inferred_exposure": { "$ref": "#/$defs/inferred_exposure" },
+        "ray_risk_score": { "type": "number", "minimum": 0, "maximum": 10 },
+        "priority": { "$ref": "#/$defs/priority" },
+        "sanity_triage_applied": { "type": ["string", "null"] },
+        "calibration_checklist": { "$ref": "#/$defs/calibration_checklist" },
+        "outrage_commentary": { "type": "string" },
+        "executive_summary": { "type": "string" },
+        "history": { "type": "array", "items": { "$ref": "#/$defs/history_entry" }, "minItems": 1 }
+      },
+
+      "allOf": [
+        {
+          "$comment": "VALID-status consistency: a VALID non-chain finding's triage_checklist must carry no UNKNOWN and no FAIL / passes:false.",
+          "if": {
+            "properties": { "status": { "const": "VALID" } },
+            "required": ["status", "triage_checklist"]
+          },
+          "then": {
+            "properties": {
+              "triage_checklist": {
+                "patternProperties": {
+                  "^[a-z_]+$": {
+                    "not": {
+                      "anyOf": [
+                        { "properties": { "outcome": { "enum": ["UNKNOWN", "FAIL"] } }, "required": ["outcome"] },
+                        { "properties": { "passes": { "const": false } }, "required": ["passes"] }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "$comment": "FAIL is only permitted when the finding is FALSE_POSITIVE.",
+          "if": {
+            "properties": {
+              "triage_checklist": {
+                "patternProperties": {
+                  "^[a-z_]+$": { "properties": { "outcome": { "const": "FAIL" } }, "required": ["outcome"] }
+                },
+                "minProperties": 1
+              }
+            },
+            "required": ["triage_checklist"]
+          },
+          "then": { "properties": { "status": { "const": "FALSE_POSITIVE" } } }
+        },
+        {
+          "$comment": "VERIFIED_SECURE re-attack gate (INV-1): requires failed_to_bypass and >= 3 variants that all failed to trigger.",
+          "if": {
+            "properties": { "patch_status": { "const": "VERIFIED_SECURE" } },
+            "required": ["patch_status"]
+          },
+          "then": {
+            "required": ["reattack_status", "reattack_variants"],
+            "properties": {
+              "reattack_status": { "const": "failed_to_bypass" },
+              "reattack_variants": {
+                "type": "array",
+                "minItems": 3,
+                "items": { "properties": { "triggered": { "const": false } }, "required": ["triggered"] }
+              }
+            }
+          }
+        },
+        {
+          "$comment": "DUPLICATE and possible_duplicate_of to the same target are mutually exclusive; a DUPLICATE must carry duplicate_of.",
+          "if": { "properties": { "status": { "const": "DUPLICATE" } }, "required": ["status"] },
+          "then": { "required": ["duplicate_of"] }
+        }
+      ]
+    },
+
+    "execution_log_entry": {
+      "type": "object",
+      "description": "Normalized trajectory record consumed by ray-retrospective. A harness/adapter normalizes raw framework logs into this shape before passing them.",
+      "required": ["role", "type"],
+      "properties": {
+        "role": { "enum": ["user", "assistant", "tool", "system"] },
+        "type": { "enum": ["message", "tool_call", "tool_result", "thought", "error"] },
+        "stage": { "type": "string", "description": "The Ray stage that emitted the entry, if known." },
+        "name": { "type": "string", "description": "Tool or command name for tool_call/tool_result." },
+        "content": { "type": "string" },
+        "ok": { "type": "boolean", "description": "For tool_result/error: whether the step succeeded." },
+        "timestamp": { "$ref": "#/$defs/iso8601" }
+      }
+    },
+
+    "trajectory_insight": {
+      "type": "object",
+      "description": "One durable learning appended to workspace/insights.jsonl by ray-retrospective or ray-magistrate.",
+      "required": ["type", "insight"],
+      "properties": {
+        "type": { "enum": ["trajectory_insight", "vulnerability", "false_assumption", "viable_path", "verified_patch", "missing_transcript"] },
+        "insight": { "type": "string" },
+        "title": { "type": "string" },
+        "code_paths": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string" },
+        "snapshot": { "type": "string" },
+        "pass_number": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+
+  "type": "object",
+  "$ref": "#/$defs/finding"
+}

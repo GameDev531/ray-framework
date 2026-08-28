@@ -68,7 +68,14 @@ a canonical, interlinked Markdown Knowledge Base (`workspace/kb/`).
     `workspace/archive/kb/kb_pass_${N}_${X}/` (so a later reverted fix cannot
     silently erase the record of what the KB claimed at pass N).
 - **Preconditions**:
-  - `workspace/insights.jsonl` must exist.
+  - None that block a first run. `workspace/insights.jsonl` is consumed if
+    present, but its ABSENCE is normal on the FIRST pass of a fresh repo (no
+    prior stage has produced insights yet — `ray-magistrate` and
+    `ray-retrospective` write it later in the loop). When it is absent, skip the
+    inbox step (Step 1) and build the KB from `CODE_ROOT` alone; do NOT stop.
+    Likewise `workspace/historical_insights.jsonl` (VCS history, produced by
+    `ray-ledger`) is optional — absent means "no history mined yet", never a
+    failure.
 - **Idempotency Guarantee**:
   - Transactional: moves `workspace/insights.jsonl` to archive only after
     programmatically verifying all KB Markdown updates were written
