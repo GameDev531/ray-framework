@@ -230,6 +230,31 @@ findings (SNAPSHOT MODE OFF) flow into steps 2-5 below.
    each finding against these strict criteria. Mark a finding as
    **FALSE_POSITIVE** if it violates any of the following rules:
 
+   **Profile Review Overrides (read FIRST, before applying the 13 rules).** Read
+   any `Review Overrides:` block in `workspace/kb/THREAT_MODEL.md` (written by
+   `ray-perimeter` when `ray-conductor` runs with a `--profile`; see
+   `profiles/*.md`). Each `IN_SCOPE: <class>` line names a finding class that a
+   default-conservative rule would otherwise auto-dismiss for this target type. For
+   a class marked IN_SCOPE, the named auto-dismissal rule below MUST NOT fire on its
+   own — evaluate the finding on impact like any other:
+   - `cors` / `security_headers` / `cookie_flags` → **rule 02** MUST NOT
+     auto-`FALSE_POSITIVE` an open/credentialed CORS, a missing CSP/HSTS/frame
+     header on a sensitive page with a real sink, or a session/auth cookie missing
+     `HttpOnly`/`Secure`/`SameSite`. (A web-app profile sets these — a web SaaS
+     surfaces these instead of dismissing them as hygiene.)
+   - `rate_limit` / `resource_exhaustion` → **rule 07** MUST NOT auto-dismiss a
+     missing rate/lockout limit on auth/OTP/expensive endpoints (web-app / llm-app /
+     native-parser profiles set this).
+   - `probabilistic` → do not down-rank a prompt-injection path merely for being
+     probabilistic when the attacker can retry (llm-app profile).
+   - `intrinsic_only` → emphasize rule 08 (intrinsic flaws are VALID with no caller).
+
+   The override removes the AUTOMATIC dismissal only; the finding still must clear
+   the impact bar (an open CORS with NO credentials on a public, non-sensitive
+   endpoint remains a non-finding). Absent a `Review Overrides` block (no profile,
+   MODE-OFF, domain-agnostic run), behave exactly as before — rules 02 and 07 apply
+   as written.
+
    01. **Ignore Hypothetical Misuse:** Do not flag security flaws that rely on a
        calling API hypothetically misusing a function, writing bad fallback
        logic, or sending invalid parameters if the function itself behaves
